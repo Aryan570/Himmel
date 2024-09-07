@@ -1,7 +1,10 @@
+import Start from "./components/Start";
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div>Hey its Aryan</div>
+    <main className="min-h-screen min-w-full w-full h-full">
+      <div className="bg-[url('/background3.gif')] aspect-video bg-no-repeat w-screen h-screen bg-contain bg-center flex justify-center items-center">
+        <Start />
+      </div>
     </main>
   );
 }

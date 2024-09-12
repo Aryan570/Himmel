@@ -16,9 +16,9 @@ const Main = () => {
           </div>
         </div>
       </div>
-      <div>
+      <button className='bg-orange-500 pixel-corners h-8 w-12 flex justify-center items-center hover:scale-125'>
         Play
-      </div>
+      </button>
     </div>
   )
 }

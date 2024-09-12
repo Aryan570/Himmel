@@ -8,7 +8,7 @@ type player_detail =  {
 const Player = (props : {dir : number , detail : player_detail}) => {
   return (
     <div className='scale-50'>
-        <Image src={"/character1.gif"} className={props.dir === 1 ? "transform -scale-x-100 brightness-75" : "brightness-75"} height={200} width={200} alt='character_display'/>
+        <Image src={"/3.gif"} className={props.dir === 1 ? "transform -scale-x-100 brightness-75" : "brightness-75"} height={200} width={200} alt='character_display'/>
     </div>
   )
 }

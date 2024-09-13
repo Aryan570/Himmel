@@ -20,3 +20,6 @@ let i = character_array.length;
 export function get_random() : ch_array{
     return character_array[Math.floor(Math.random() * i)];
 }
+// export type websocket_message = {
+//     message_type : "matchmaking" | "game_state_update"
+// }

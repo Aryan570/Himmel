@@ -1,6 +1,6 @@
 "use client"
 import Image from 'next/image'
-import React, { useEffect, useState } from 'react'
+import React, { BaseSyntheticEvent, useEffect, useState } from 'react'
 import { ch_array, get_random } from '../characters'
 const Main = () => {
   const [character, setcharacter] = useState<ch_array>(get_random());
@@ -12,6 +12,10 @@ const Main = () => {
       clearInterval(switch_int);
     }
   }, [])
+  function handle_click(e : BaseSyntheticEvent){
+    // change state to the loading state
+    console.log(e)
+  }
   // on click function for the button
   // which would call the rust to find a match -- need to write backend code for this
   // and maybe convert these gifs into some supported format images
@@ -30,7 +34,7 @@ const Main = () => {
           </div>
         </div>
       </div>
-      <button className='bg-orange-500 pixel-corners h-8 w-12 flex justify-center items-center hover:scale-125'>
+      <button onClick={handle_click} className='bg-orange-500 pixel-corners h-8 w-12 flex justify-center items-center hover:scale-125'>
         Play
       </button>
     </div>

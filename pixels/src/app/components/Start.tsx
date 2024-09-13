@@ -5,7 +5,13 @@ const Start = () => {
   useEffect(() => {
     const socket = new WebSocket("ws://127.0.0.1:8000");
     socket.onopen = () => {
-      socket.send("Hey Rust. Hello from NextJS");
+      socket.send(JSON.stringify({
+        type : "match-making",
+      }));
+      socket.onmessage = (e : MessageEvent) => {
+        console.log(e.data);
+        // setting the state
+      }
       console.log("connected to Rust Server");
     }
     return () => {

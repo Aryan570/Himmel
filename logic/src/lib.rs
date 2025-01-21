@@ -4,6 +4,7 @@ use futures::{channel::mpsc::{unbounded, UnboundedSender}, SinkExt, StreamExt};
 use uuid::Uuid;
 use async_std::{net::{TcpListener, TcpStream, ToSocketAddrs}, sync::RwLock, task::spawn};
 use async_tungstenite::{accept_hdr_async, tungstenite::{handshake::{client::Request, server::Response}, Message, Result}, WebSocketStream};
+
 type PlayerId = Uuid;
 struct GameSession {
     p1 : PlayerId,
@@ -27,11 +28,21 @@ impl ServerState {
         let mut players = self.players.write().await;
         players.insert(player, sender);
     }
-    async fn remove_player(&self, player : PlayerId){
+    async fn remove_player(&self, player : &PlayerId){
         let mut players = self.players.write().await;
         players.remove(&player);
     }
+    async fn send_to_player(&self, player : &PlayerId, msg : String) -> bool{
+        let players = self.players.read().await;
+        if let Some(mut sender) = players.get(player) {
+            if sender.send(msg).await.is_ok(){
+                return true;
+            }
+        }
+        false
+    }
 }
+
 async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_state : ServerState, player : PlayerId){
     let (mut ws_sender, mut ws_recv) = socket_stream.split();
     let (tx, mut rx) = unbounded();
@@ -50,8 +61,20 @@ async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_st
             // handle the move
         }
     }
-    server_state.remove_player(player).await;
+    server_state.remove_player(&player).await;
 }
+
+async fn handle_move(game_session : &GameSession, server_state : &ServerState, player : PlayerId, data : String){
+    if let Some(id) = game_session.get_opponent(&player) {
+        let msg = format!("{{\"move\": {data} }}");
+        if server_state.send_to_player(&id, msg).await {
+            println!("Move sent to : {:?}",id);
+        }else {
+            println!("Failed to send moves : {:?}",id);
+        }
+    }
+}
+
 pub async fn server(addr : impl ToSocketAddrs) -> Result<()>{
     let listener = TcpListener::bind(addr).await?;
     let mut incoming = listener.incoming();

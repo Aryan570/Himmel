@@ -1,8 +1,8 @@
 #![allow(dead_code)]
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use futures::{channel::mpsc::{unbounded, UnboundedSender}, SinkExt, StreamExt};
 use uuid::Uuid;
-use async_std::{net::{TcpListener, TcpStream, ToSocketAddrs}, sync::RwLock, task::spawn};
+use async_std::{net::{TcpListener, TcpStream, ToSocketAddrs}, sync::{Mutex, RwLock}, task::spawn};
 use async_tungstenite::{accept_hdr_async, tungstenite::{handshake::{client::Request, server::Response}, Message, Result}, WebSocketStream};
 
 type PlayerId = Uuid;
@@ -21,7 +21,8 @@ impl GameSession {
 }
 
 struct ServerState {
-    players : RwLock<HashMap<PlayerId, UnboundedSender<String>>>
+    players : RwLock<HashMap<PlayerId, UnboundedSender<String>>>,
+    id_to_session : RwLock<HashMap<PlayerId,GameSession>> // but where should i start this?
 }
 impl ServerState {
     async fn add_player(&self, player : PlayerId, sender : UnboundedSender<String>) {
@@ -43,6 +44,26 @@ impl ServerState {
     }
 }
 
+struct MatchMaking {
+    q : Mutex<VecDeque<PlayerId>>,
+}
+
+impl MatchMaking {
+    async fn add_player(&self, player : PlayerId){
+        let mut queue = self.q.lock().await;
+        queue.push_back(player);
+    }
+    async fn match_player(&self) -> Option<(Uuid,Uuid)>{
+        let mut queue = self.q.lock().await;
+        if queue.len() >=2 {
+            let p1 = queue.pop_front().unwrap();
+            let p2 = queue.pop_front().unwrap();
+            return Some((p1,p2));
+        }
+        None
+    }
+}
+
 async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_state : ServerState, player : PlayerId){
     let (mut ws_sender, mut ws_recv) = socket_stream.split();
     let (tx, mut rx) = unbounded();
@@ -58,7 +79,7 @@ async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_st
     while let Some(Ok(msg)) = ws_recv.next().await {
         if let Message::Text(txt) = msg {
             println!("Received message from player {:?} : {}",player,txt);
-            // handle the move
+            handle_move(game_session, &server_state, player, txt);
         }
     }
     server_state.remove_player(&player).await;

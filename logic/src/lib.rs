@@ -6,11 +6,16 @@ use async_std::{net::{TcpListener, TcpStream, ToSocketAddrs}, sync::{Mutex, RwLo
 use async_tungstenite::{accept_hdr_async, tungstenite::{handshake::{client::Request, server::Response}, Message, Result}, WebSocketStream};
 
 type PlayerId = Uuid;
+
+#[derive(Clone)]
 struct GameSession {
     p1 : PlayerId,
     p2 : PlayerId
 }
 impl GameSession {
+    fn new(player_1 : PlayerId, player_2 : PlayerId) -> Self{
+        GameSession { p1: player_1, p2: player_2 }
+    }
     fn get_opponent(&self, player : &PlayerId) -> Option<PlayerId> {
         match player {
             p if p == &self.p1 => Some(self.p2),
@@ -22,9 +27,12 @@ impl GameSession {
 
 struct ServerState {
     players : RwLock<HashMap<PlayerId, UnboundedSender<String>>>,
-    id_to_session : RwLock<HashMap<PlayerId,GameSession>> // but where should i start this?
+    id_to_session : RwLock<HashMap<PlayerId,GameSession>> 
 }
 impl ServerState {
+    fn new() -> Self {
+        ServerState { players: RwLock::new(HashMap::new()) , id_to_session: RwLock::new(HashMap::new()) }
+    }
     async fn add_player(&self, player : PlayerId, sender : UnboundedSender<String>) {
         let mut players = self.players.write().await;
         players.insert(player, sender);
@@ -42,6 +50,15 @@ impl ServerState {
         }
         false
     }
+    async fn add_session(&self, p1 : &PlayerId, p2 : &PlayerId, game_session : &GameSession){
+        let mut i_t_s = self.id_to_session.write().await;
+        i_t_s.insert(*p1, game_session.clone());
+        i_t_s.insert(*p2, game_session.clone());
+    }
+    async fn get_session(&self, player : &PlayerId) -> Option<GameSession>{
+        let id_session = self.id_to_session.read().await;
+        id_session.get(player).cloned()
+    }
 }
 
 struct MatchMaking {
@@ -49,6 +66,9 @@ struct MatchMaking {
 }
 
 impl MatchMaking {
+    fn new() -> Self{
+        MatchMaking { q : Mutex::new(VecDeque::new()) }
+    }
     async fn add_player(&self, player : PlayerId){
         let mut queue = self.q.lock().await;
         queue.push_back(player);
@@ -79,7 +99,9 @@ async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_st
     while let Some(Ok(msg)) = ws_recv.next().await {
         if let Message::Text(txt) = msg {
             println!("Received message from player {:?} : {}",player,txt);
-            handle_move(game_session, &server_state, player, txt);
+            if let Some(session) = server_state.get_session(&player).await {
+                handle_move(&session, &server_state, player, txt).await;
+            }
         }
     }
     server_state.remove_player(&player).await;

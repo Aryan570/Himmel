@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use std::collections::{HashMap, VecDeque};
+use std::{collections::{HashMap, VecDeque}, sync::Arc};
 use futures::{channel::mpsc::{unbounded, UnboundedSender}, SinkExt, StreamExt};
 use uuid::Uuid;
 use async_std::{net::{TcpListener, TcpStream, ToSocketAddrs}, sync::{Mutex, RwLock}, task::spawn};
@@ -50,10 +50,10 @@ impl ServerState {
         }
         false
     }
-    async fn add_session(&self, p1 : &PlayerId, p2 : &PlayerId, game_session : &GameSession){
+    async fn add_session(&self, p1 : &PlayerId, p2 : &PlayerId, game_session : GameSession){
         let mut i_t_s = self.id_to_session.write().await;
         i_t_s.insert(*p1, game_session.clone());
-        i_t_s.insert(*p2, game_session.clone());
+        i_t_s.insert(*p2, game_session);
     }
     async fn get_session(&self, player : &PlayerId) -> Option<GameSession>{
         let id_session = self.id_to_session.read().await;
@@ -73,7 +73,7 @@ impl MatchMaking {
         let mut queue = self.q.lock().await;
         queue.push_back(player);
     }
-    async fn match_player(&self) -> Option<(Uuid,Uuid)>{
+    async fn match_player(&self) -> Option<(PlayerId,PlayerId)>{
         let mut queue = self.q.lock().await;
         if queue.len() >=2 {
             let p1 = queue.pop_front().unwrap();
@@ -84,10 +84,10 @@ impl MatchMaking {
     }
 }
 
-async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_state : ServerState, player : PlayerId){
+async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_state : &Arc<Mutex<ServerState>>, player : PlayerId){
     let (mut ws_sender, mut ws_recv) = socket_stream.split();
     let (tx, mut rx) = unbounded();
-    server_state.add_player(player, tx.clone()).await;
+    server_state.lock().await.add_player(player, tx.clone()).await;
     spawn(async move {
         while let Some(msg) = rx.next().await {
            if ws_sender.send(Message::Text(msg)).await.is_err() {
@@ -99,18 +99,18 @@ async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_st
     while let Some(Ok(msg)) = ws_recv.next().await {
         if let Message::Text(txt) = msg {
             println!("Received message from player {:?} : {}",player,txt);
-            if let Some(session) = server_state.get_session(&player).await {
+            if let Some(session) = server_state.lock().await.get_session(&player).await {
                 handle_move(&session, &server_state, player, txt).await;
             }
         }
     }
-    server_state.remove_player(&player).await;
+    server_state.lock().await.remove_player(&player).await;
 }
 
-async fn handle_move(game_session : &GameSession, server_state : &ServerState, player : PlayerId, data : String){
+async fn handle_move(game_session : &GameSession, server_state : &Arc<Mutex<ServerState>>, player : PlayerId, data : String){
     if let Some(id) = game_session.get_opponent(&player) {
         let msg = format!("{{\"move\": {data} }}");
-        if server_state.send_to_player(&id, msg).await {
+        if server_state.lock().await.send_to_player(&id, msg).await {
             println!("Move sent to : {:?}",id);
         }else {
             println!("Failed to send moves : {:?}",id);
@@ -121,20 +121,23 @@ async fn handle_move(game_session : &GameSession, server_state : &ServerState, p
 pub async fn server(addr : impl ToSocketAddrs) -> Result<()>{
     let listener = TcpListener::bind(addr).await?;
     let mut incoming = listener.incoming();
+    let state = Arc::new(Mutex::new(ServerState::new()));
+    let match_making = Arc::new(Mutex::new(MatchMaking::new()));
     while let Some(stream) = incoming.next().await {
         let stream = stream?;
-        spawn( async move {
+        let state_clone = state.clone();
+        let mm_clone = match_making.clone();
+        spawn(async move {
             let callback = |_req : &Request, res : Response| {
                 Ok(res)
             };
-            let mut websocket = accept_hdr_async(stream, callback).await.expect("error in msg");
-            while let Some(Ok(message)) = websocket.next().await {
-                match message {
-                    Message::Text(text) => println!("Text message received: {}",text),
-                    Message::Binary(bin) => println!("Binary message received: {:?}",bin),
-                    Message::Close(_) => println!("Client disconnected"),
-                    _ => {},
-                }
+            let websocket = accept_hdr_async(stream, callback).await.expect("error in msg");
+            let new_player = Uuid::new_v4();
+            handle_connection(websocket, &state_clone, new_player).await;
+            mm_clone.lock().await.add_player(new_player).await;
+            if let Some((p1,p2)) = mm_clone.lock().await.match_player().await {
+                let game = GameSession::new(p1, p2);
+                state_clone.lock().await.add_session(&p1, &p2, game).await;
             }
         });
     }

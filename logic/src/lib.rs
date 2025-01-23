@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+//#![allow(dead_code)]
 use std::{collections::{HashMap, VecDeque}, sync::Arc};
 use futures::{channel::mpsc::{unbounded, UnboundedSender}, SinkExt, StreamExt};
 use uuid::Uuid;
@@ -99,7 +99,9 @@ async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_st
     while let Some(Ok(msg)) = ws_recv.next().await {
         if let Message::Text(txt) = msg {
             println!("Received message from player {:?} : {}",player,txt);
-            if let Some(session) = server_state.lock().await.get_session(&player).await {
+            let c = server_state.lock().await.get_session(&player).await;
+            if let Some(session) = c {
+                println!("Here!! I'm");
                 handle_move(&session, &server_state, player, txt).await;
             }
         }
@@ -133,12 +135,12 @@ pub async fn server(addr : impl ToSocketAddrs) -> Result<()>{
             };
             let websocket = accept_hdr_async(stream, callback).await.expect("error in msg");
             let new_player = Uuid::new_v4();
-            handle_connection(websocket, &state_clone, new_player).await;
             mm_clone.lock().await.add_player(new_player).await;
             if let Some((p1,p2)) = mm_clone.lock().await.match_player().await {
                 let game = GameSession::new(p1, p2);
                 state_clone.lock().await.add_session(&p1, &p2, game).await;
             }
+            handle_connection(websocket, &state_clone, new_player).await;
         });
     }
     Ok(())

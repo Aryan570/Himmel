@@ -1,4 +1,4 @@
-//#![allow(dead_code)]
+#![allow(dead_code)]
 use std::{collections::{HashMap, VecDeque}, sync::Arc};
 use serde::{Serialize,Deserialize};
 use futures::{channel::mpsc::{unbounded, UnboundedSender}, SinkExt, StreamExt};
@@ -9,6 +9,8 @@ type PlayerId = Uuid;
 
 #[derive(Serialize,Deserialize)]
 struct Move {
+    charac_p1 : String,
+    charac_p2 : String,
     h1 : i8, // health of player 1
     h2 : i8, // health of player 2
     buffs_player_1 : u8,
@@ -17,13 +19,59 @@ struct Move {
     debuffs_player_2 : u8,
     // true => player1 is hitting player 2, false => player2 is hitting
     // player1,(will refactor this part later on)
-    attacker : Option<bool>,
+    attacker : u8, // should it be of type PlayerId ? or 0,1,2
     move_type : u8, // only from 1 -> 5 (Some moves add buffs and debuffs, with the damage too) =>
     // 0 if initiliasing the object
 }
+// say buff looks like this int bits -> (can be only 1 or 0, but the abilities depends on
+// characters)
+// X => amount of health to regenerate on the attacker 
+// X => amount of additional damage to be done on opponent (Damage multiplier ?) => Gives debuff
+// X => toggle Armor (Reduces damage)
+// X => Think Something
+// X => Think Something
+
+// say debuff look like this ->
+// Y => amount of additional damage to be done to the cur
+// can't think of anything else, => should this be a bool only ? (Maybe LifeSteal)
 impl Move {
+    // We might not need this new(), as we ser/deser Move from the client, the thing is => client
+    // has to interact to choose charcaters, maybe => when client connects, first they have to
+    // choose character from a list and I send connection request with Character to the server,
+    // then again I store the Information according to Uuid in the Server_State | Something to
+    // think about for sure.
     fn new() -> Self {
-        Move { h1: 100, h2: 100, buffs_player_1: 0, buffs_player_2: 0, debuffs_player_1: 0, debuffs_player_2: 0, attacker: None, move_type: 0 }
+        Move { charac_p1: "".to_string(),charac_p2 : "".to_string(), h1: 100, h2: 100, buffs_player_1: 0, buffs_player_2: 0, debuffs_player_1: 0, debuffs_player_2: 0, attacker: 0, move_type: 0 }
+    }
+    fn calculate(&mut self){
+        let mut diff = 0;
+        let mut att = 0;
+        match self.attacker == 1 {
+            true => {
+                let tmp = self.buffs_player_1;
+                if(tmp & (1 << 0)) == 1{ att += 4; } // should be added according to character
+                if(tmp & (1 << 1)) == 1{ diff -= 4; } 
+                if(tmp & (1 << 2)) == 1{ diff += 2; } 
+                // Do a base damage for all the attacks
+                let base = -20;
+                // we need to do something about Debuffs
+                // Update the Current object
+                self.h2 = (base + diff + self.h2).max(0);
+                self.h1 = (self.h1 + att).max(100);
+            }
+            _ => {
+                let tmp = self.buffs_player_2;
+                if(tmp & (1 << 0)) == 1{ att += 4; } // should be added according to character
+                if(tmp & (1 << 1)) == 1{ diff -= 4; } 
+                if(tmp & (1 << 2)) == 1{ diff += 2; } 
+                // Do a base damage for all the attacks
+                let base = -20;
+                // we need to do something about Debuffs
+                // Update the Current object
+                self.h1 = (base + diff + self.h2).max(0);
+                self.h2 = (self.h1 + att).max(100);
+            }
+        }
     }
     // also add, how to calculate the remaining health
 }

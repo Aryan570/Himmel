@@ -1,11 +1,32 @@
 //#![allow(dead_code)]
 use std::{collections::{HashMap, VecDeque}, sync::Arc};
+use serde::{Serialize,Deserialize};
 use futures::{channel::mpsc::{unbounded, UnboundedSender}, SinkExt, StreamExt};
 use uuid::Uuid;
 use async_std::{net::{TcpListener, TcpStream, ToSocketAddrs}, sync::{Mutex, RwLock}, task::spawn};
 use async_tungstenite::{accept_hdr_async, tungstenite::{handshake::{client::Request, server::Response}, Message, Result}, WebSocketStream};
-
 type PlayerId = Uuid;
+
+#[derive(Serialize,Deserialize)]
+struct Move {
+    h1 : i8, // health of player 1
+    h2 : i8, // health of player 2
+    buffs_player_1 : u8,
+    buffs_player_2 : u8,
+    debuffs_player_1 : u8,
+    debuffs_player_2 : u8,
+    // true => player1 is hitting player 2, false => player2 is hitting
+    // player1,(will refactor this part later on)
+    attacker : Option<bool>,
+    move_type : u8, // only from 1 -> 5 (Some moves add buffs and debuffs, with the damage too) =>
+    // 0 if initiliasing the object
+}
+impl Move {
+    fn new() -> Self {
+        Move { h1: 100, h2: 100, buffs_player_1: 0, buffs_player_2: 0, debuffs_player_1: 0, debuffs_player_2: 0, attacker: None, move_type: 0 }
+    }
+    // also add, how to calculate the remaining health
+}
 
 #[derive(Clone)]
 struct GameSession {

@@ -22,6 +22,7 @@ struct Move {
     attacker : u8, // should it be of type PlayerId ? or 0,1,2
     move_type : u8, // only from 1 -> 5 (Some moves add buffs and debuffs, with the damage too) =>
     // 0 if initiliasing the object
+    locked : u8, // => mask that tells you, which powers are locked & which are not
 }
 // say buff looks like this int bits -> (can be only 1 or 0, but the abilities depends on
 // characters)
@@ -40,9 +41,6 @@ impl Move {
     // choose character from a list and I send connection request with Character to the server,
     // then again I store the Information according to Uuid in the Server_State | Something to
     // think about for sure.
-    fn new() -> Self {
-        Move { charac_p1: "".to_string(),charac_p2 : "".to_string(), h1: 100, h2: 100, buffs_player_1: 0, buffs_player_2: 0, debuffs_player_1: 0, debuffs_player_2: 0, attacker: 0, move_type: 0 }
-    }
     fn calculate(&mut self){
         let mut diff = 0;
         let mut att = 0;
@@ -111,6 +109,7 @@ impl ServerState {
         players.remove(&player);
     }
     async fn send_to_player(&self, player : &PlayerId, msg : String) -> bool{
+        // we may want to send the info to both the players
         let players = self.players.read().await;
         if let Some(mut sender) = players.get(player) {
             if sender.send(msg).await.is_ok(){
@@ -171,21 +170,26 @@ async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_st
             let c = server_state.lock().await.get_session(&player).await;
             if let Some(session) = c {
                 println!("Here!! I'm");
-                handle_move(&session, &server_state, player, txt).await;
+                handle_move(&session, &server_state, player, &txt).await;
             }
         }
     }
     server_state.lock().await.remove_player(&player).await;
 }
 
-async fn handle_move(game_session : &GameSession, server_state : &Arc<Mutex<ServerState>>, player : PlayerId, data : String){
+async fn handle_move(game_session : &GameSession, server_state : &Arc<Mutex<ServerState>>, player : PlayerId, data : &String){
     if let Some(id) = game_session.get_opponent(&player) {
         let msg = format!("{{\"move\": {data} }}");
-        if server_state.lock().await.send_to_player(&id, msg).await {
+        // parse the data as struct => Move , then call Move.calculate
+        // then convert it to JSON String, using serde_json, to transport on network
+        if server_state.lock().await.send_to_player(&id, msg.clone()).await {
             println!("Move sent to : {:?}",id);
-        }else {
-            println!("Failed to send moves : {:?}",id);
         }
+        if server_state.lock().await.send_to_player(&player, msg).await {
+            println!("Move sent to : {:?}",player);
+            return;
+        }
+        println!("There is some error in sending message to both players");
     }
 }
 

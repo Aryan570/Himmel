@@ -71,7 +71,6 @@ impl Move {
             }
         }
     }
-    // also add, how to calculate the remaining health
 }
 
 #[derive(Clone)]

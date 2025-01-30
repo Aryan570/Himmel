@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter , Pixelify_Sans } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "./Providers";
 
 const inter = Inter({ subsets: ["latin"] });
 const pixel = Pixelify_Sans({subsets : ["latin","cyrillic","latin-ext"]});
@@ -17,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={pixel.className}>{children}</body>
+      <body className={pixel.className}><AuthProvider>{children}</AuthProvider></body>
     </html>
   );
 }

@@ -96,11 +96,12 @@ impl GameSession {
 
 struct ServerState {
     players : RwLock<HashMap<PlayerId, UnboundedSender<String>>>,
-    id_to_session : RwLock<HashMap<PlayerId,GameSession>> 
+    id_to_session : RwLock<HashMap<PlayerId,GameSession>>,
+    player_to_character : RwLock<HashMap<PlayerId,String>>
 }
 impl ServerState {
     fn new() -> Self {
-        ServerState { players: RwLock::new(HashMap::new()) , id_to_session: RwLock::new(HashMap::new()) }
+        ServerState { players: RwLock::new(HashMap::new()) , id_to_session: RwLock::new(HashMap::new()) , player_to_character : RwLock::new(HashMap::new())}
     }
     async fn add_player(&self, player : PlayerId, sender : UnboundedSender<String>) {
         let mut players = self.players.write().await;
@@ -181,7 +182,12 @@ async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_st
     while let Some(Ok(msg)) = ws_recv.next().await {
         if let Message::Text(txt) = msg {
             println!("Received message from player {:?} : {}",player,txt);
+            let mov : Result<Move,_> = serde_json::from_str(&txt);
             let c = server_state.lock().await.get_session(&player).await;
+            if mov.is_err() && c.is_none(){
+                server_state.lock().await.player_to_character.write().await.insert(player, txt);
+                continue;
+            }
             if let Some(session) = c {
                 println!("Here!! I'm");
                 handle_move(&session, &server_state, player, &txt).await;
@@ -224,6 +230,7 @@ pub async fn server(addr : impl ToSocketAddrs) -> Result<()>{
             let new_player = Uuid::new_v4();
             mm_clone.lock().await.add_player(new_player).await;
             if let Some((p1,p2)) = mm_clone.lock().await.match_player().await {
+                // should update when I match players
                 let game = GameSession::new(p1, p2);
                 state_clone.lock().await.add_session(&p1, &p2, game).await;
             }

@@ -7,7 +7,7 @@ use async_std::{net::{TcpListener, TcpStream, ToSocketAddrs}, sync::{Mutex, RwLo
 use async_tungstenite::{accept_hdr_async, tungstenite::{handshake::{client::Request, server::Response}, Message, Result}, WebSocketStream};
 type PlayerId = Uuid;
 
-#[derive(Serialize,Deserialize)]
+#[derive(Serialize,Deserialize,Clone)]
 struct Move {
     charac_p1 : String,
     charac_p2 : String,
@@ -19,7 +19,7 @@ struct Move {
     debuffs_player_2 : u8,
     // true => player1 is hitting player 2, false => player2 is hitting
     // player1,(will refactor this part later on)
-    attacker : u8, // should it be of type PlayerId ? or 0,1,2
+    attacker : bool, // should it be of type PlayerId ? or 0,1,2
     move_type : u8, // only from 1 -> 5 (Some moves add buffs and debuffs, with the damage too) =>
     // 0 if initiliasing the object
     locked : u8, // => mask that tells you, which powers are locked & which are not
@@ -41,10 +41,13 @@ impl Move {
     // choose character from a list and I send connection request with Character to the server,
     // then again I store the Information according to Uuid in the Server_State | Something to
     // think about for sure.
+    fn new() -> Self{
+        return Move { charac_p1: "".to_string(), charac_p2: "".to_string(), h1: 100, h2: 100, buffs_player_1: 0, buffs_player_2: 0, debuffs_player_1: 0, debuffs_player_2: 0, attacker: true, move_type: 0, locked: 0 }
+    }
     fn calculate(&mut self){
         let mut diff = 0;
         let mut att = 0;
-        match self.attacker == 1 {
+        match self.attacker {
             true => {
                 let tmp = self.buffs_player_1;
                 if(tmp & (1 << 0)) == 1{ att += 4; } // should be added according to character
@@ -121,6 +124,18 @@ impl ServerState {
         let mut i_t_s = self.id_to_session.write().await;
         i_t_s.insert(*p1, game_session.clone());
         i_t_s.insert(*p2, game_session);
+        let players = self.players.read().await;
+        let msg = serde_json::to_string(&Move::new()).expect("Couldn't convert to Json String"); 
+        if let Some(mut sender) = players.get(p1) {
+            if sender.send(msg.clone()).await.is_ok(){
+                println!("Sent to player : {}",p1);
+            }
+        }
+        if let Some(mut sender) = players.get(p2) {
+            if sender.send(msg).await.is_ok(){
+                println!("Sent to player : {}",p2);
+            }
+        }
     }
     async fn get_session(&self, player : &PlayerId) -> Option<GameSession>{
         let id_session = self.id_to_session.read().await;

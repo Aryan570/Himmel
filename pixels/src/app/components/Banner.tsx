@@ -1,12 +1,14 @@
 "use client"
 import Image from 'next/image'
 import React, { BaseSyntheticEvent, useEffect, useState } from 'react'
-import { ch_array, get_random } from '../characters'
-import SignOut from './SignOut'
+import { ch_array, character_array, get_random } from '../characters'
+// import SignOut from './SignOut'
 import Matching from './Matching'
 const Banner = () => {
   const [character, setcharacter] = useState<ch_array>(get_random());
   const [is_loading, setis_loading] = useState(false);
+  const [choose, setchoose] = useState(false);
+  const [chosen, setchosen] = useState("");
   useEffect(() => {
     const switch_int = setInterval(() => {
       setcharacter(get_random());
@@ -15,12 +17,28 @@ const Banner = () => {
       clearInterval(switch_int);
     }
   }, [])
-  function handle_click(e : BaseSyntheticEvent){
+  function handle_click(e: BaseSyntheticEvent) {
     // change state to the loading state
     console.log(e)
-    setis_loading(true);
+    setchoose(true);
   }
-  if(is_loading) return <Matching/>;
+  function handle_choose(e : BaseSyntheticEvent){
+    setchosen(e.target.value);
+    setis_loading(true);
+    setchoose(false);
+  }
+  if (is_loading) return <Matching char={chosen} />;
+  if(choose){
+        return (
+            <div className='flex justify-center items-center h-screen'>
+                <div className='grid grid-cols-4 gap-4 h-1/3 w-1/3'>
+                    {character_array.map((e: ch_array) => (
+                        <button onClick={handle_choose} className='p-4' value={e.character_name} key={e.character_name}><Image src={`${e.character_name}.gif`} alt='char_image' height={100} width={100} /></button>
+                    ))}
+                </div>
+            </div>
+        )
+  }
   // on click function for the button
   // which would call the rust to find a match -- need to write backend code for this
   // and maybe convert these gifs into some supported format images
@@ -29,7 +47,7 @@ const Banner = () => {
       <div className='w-1/3 h-1/3 bg-orange-500 rounded-lg border-2 flex justify-center items-center'>
         <div className='grid grid-rows-3 grid-cols-5 m-1 border-2 rounded-lg items-center h-[97%]'>
           <div className='flex justify-center items-center col-span-2 row-span-3 border-r-2 h-full'>
-            <Image src={`/${character.character}.gif`} height={100} width={100} alt='character'/>
+            <Image src={`/${character.character_name}.gif`} height={100} width={100} alt='character' />
           </div>
           <div className='flex justify-center items-center col-start-3 col-span-3 row-span-1 border-b-2 h-full'>
             {character.character_name}

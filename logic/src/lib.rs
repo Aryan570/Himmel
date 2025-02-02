@@ -190,16 +190,16 @@ async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_st
             }
             if let Some(session) = c {
                 println!("Here!! I'm");
-                handle_move(&session, &server_state, player, &txt).await;
+                handle_move(&session, &server_state, player, mov.unwrap()).await;
             }
         }
     }
     server_state.lock().await.remove_player(&player).await;
 }
 
-async fn handle_move(game_session : &GameSession, server_state : &Arc<Mutex<ServerState>>, player : PlayerId, data : &String){
+async fn handle_move(game_session : &GameSession, server_state : &Arc<Mutex<ServerState>>, player : PlayerId, data : Move){
     if let Some(id) = game_session.get_opponent(&player) {
-        let msg = format!("{{\"move\": {data} }}");
+        let msg = serde_json::to_string(&data).expect("cannot convert the move to the serde string"); 
         // parse the data as struct => Move , then call Move.calculate
         // then convert it to JSON String, using serde_json, to transport on network
         if server_state.lock().await.send_to_player(&id, msg.clone()).await {

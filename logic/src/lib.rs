@@ -76,7 +76,7 @@ impl Move {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone,Copy)]
 struct GameSession {
     p1 : PlayerId,
     p2 : PlayerId
@@ -110,6 +110,18 @@ impl ServerState {
     async fn remove_player(&self, player : &PlayerId){
         let mut players = self.players.write().await;
         players.remove(&player);
+        let opponent = self.id_to_session.read().await.get(player).copied();
+        self.id_to_session.write().await.remove(player);
+        self.player_to_character.write().await.remove(player);
+        match opponent {
+            Some(x) => {
+                let opponent = x.get_opponent(player).expect("No opponent ?");
+                self.id_to_session.write().await.remove(&opponent);
+            }
+            _ => {
+                return;
+            }
+        }
     }
     async fn send_to_player(&self, player : &PlayerId, msg : String) -> bool{
         // we may want to send the info to both the players

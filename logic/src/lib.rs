@@ -41,8 +41,8 @@ impl Move {
     // choose character from a list and I send connection request with Character to the server,
     // then again I store the Information according to Uuid in the Server_State | Something to
     // think about for sure.
-    fn new() -> Self{
-        return Move { charac_p1: "".to_string(), charac_p2: "".to_string(), h1: 100, h2: 100, buffs_player_1: 0, buffs_player_2: 0, debuffs_player_1: 0, debuffs_player_2: 0, attacker: true, move_type: 0, locked: 0 }
+    fn new(c1 : String, c2 : String) -> Self{
+        return Move { charac_p1: c1, charac_p2: c2, h1: 100, h2: 100, buffs_player_1: 0, buffs_player_2: 0, debuffs_player_1: 0, debuffs_player_2: 0, attacker: true, move_type: 0, locked: 0 }
     }
     fn calculate(&mut self){
         let mut diff = 0;
@@ -138,7 +138,9 @@ impl ServerState {
         i_t_s.insert(*p1, game_session.clone());
         i_t_s.insert(*p2, game_session);
         let players = self.players.read().await;
-        let msg = serde_json::to_string(&Move::new()).expect("Couldn't convert to Json String"); 
+        let p1_char = self.player_to_character.read().await.get(p1).expect("p1_char cannot be None").to_string();
+        let p2_char = self.player_to_character.read().await.get(p2).expect("p2_char caanot be None").to_string();
+        let msg = serde_json::to_string(&Move::new(p1_char,p2_char)).expect("Couldn't convert to Json String"); 
         if let Some(mut sender) = players.get(p1) {
             if sender.send(msg.clone()).await.is_ok(){
                 println!("Sent to player : {}",p1);
@@ -238,9 +240,18 @@ pub async fn server(addr : impl ToSocketAddrs) -> Result<()>{
             let callback = |_req : &Request, res : Response| {
                 Ok(res)
             };
-            let websocket = accept_hdr_async(stream, callback).await.expect("error in msg");
+            let mut websocket = accept_hdr_async(stream, callback).await.expect("error in msg");
             let new_player = Uuid::new_v4();
             mm_clone.lock().await.add_player(new_player).await;
+            if let Some(Ok(charac)) = websocket.next().await {
+                println!("Character selected by player : {} is {}",new_player,charac);
+                state_clone.lock().await.player_to_character.write().await.insert(new_player, charac.to_string());
+            }
+            // well new problem is => I want input from the user related to characters they have
+            // selected, but the way I'm using game session now, I can't get the characters
+            //handle_connection(websocket, &state_clone, new_player).await;
+            // but having handle_connection before creating game session means I will never get to
+            // it
             if let Some((p1,p2)) = mm_clone.lock().await.match_player().await {
                 // should update when I match players
                 let game = GameSession::new(p1, p2);

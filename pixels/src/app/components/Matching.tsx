@@ -48,11 +48,13 @@ const Matching = (props : {char : string}) => {
         socket.onopen = () => {
             // most probably, I won't do anything other than setting finding state to false
             console.log("Found an opponent");
+            console.log(props.char);
             socket.send(props.char); // what would this do actually? => I will store (player => character)
             setsock(socket);
         }
         socket.onmessage = (e: MessageEvent) => {
-            const data: Move = JSON.parse(e.data);
+            const data = JSON.parse(e.data);
+            console.log(data);
             setfound(true);
             setplayers(data);
             console.log(data);
@@ -85,7 +87,7 @@ const Matching = (props : {char : string}) => {
                             <button value={4} onClick={to_rust} className='text-slate-50 bg-slate-500' disabled={(1 & (players.locked << 4)) && !players.attacker ? true : false}>NN</button>
                         </div>
                         <div className='flex justify-center items-center basis-5/6'>
-                            <Image src={`${players.charac_p1}.gif`} className='brightness-75' alt='character_1' height={200} width={200} />
+                            <Image src={`/${players.charac_p1}.gif`} className='brightness-75' alt='character_1' height={200} width={200} />
                         </div>
                     </div>
                 </div>
@@ -96,7 +98,7 @@ const Matching = (props : {char : string}) => {
                     </div>
                     <div className='flex h-5/6'>
                         <div className='flex justify-center items-center basis-5/6'>
-                            <Image className='transform -scale-x-100 brightness-75' src={`${players.charac_p2}.gif`} alt='character_1' height={200} width={200} />
+                            <Image className='transform -scale-x-100 brightness-75' src={`/${players.charac_p2}.gif`} alt='character_1' height={200} width={200} />
                         </div>
                         <div className='basis-1/6'>
                             <button value={0} onClick={to_rust} className='text-slate-50 bg-slate-500' disabled={(1 & (players.locked << 0)) && players.attacker ? true : false}>FA</button>

@@ -19,11 +19,10 @@ const Banner = () => {
   }, [])
   function handle_click(e: BaseSyntheticEvent) {
     // change state to the loading state
-    console.log(e)
     setchoose(true);
   }
   function handle_choose(e : BaseSyntheticEvent){
-    setchosen(e.target.value);
+    setchosen(e.currentTarget.value);
     setis_loading(true);
     setchoose(false);
   }

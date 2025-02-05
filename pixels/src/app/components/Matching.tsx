@@ -48,7 +48,7 @@ const Matching = (props : {char : string}) => {
         socket.onopen = () => {
             // most probably, I won't do anything other than setting finding state to false
             console.log("Found an opponent");
-            socket.send(props.char);
+            socket.send(props.char); // what would this do actually? => I will store (player => character)
             setsock(socket);
         }
         socket.onmessage = (e: MessageEvent) => {

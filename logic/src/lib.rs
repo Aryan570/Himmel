@@ -181,10 +181,15 @@ impl MatchMaking {
     }
 }
 
-async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_state : &Arc<Mutex<ServerState>>, player : PlayerId){
+async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_state : &Arc<Mutex<ServerState>>, player : PlayerId, mm : &Arc<Mutex<MatchMaking>>){
     let (mut ws_sender, mut ws_recv) = socket_stream.split();
     let (tx, mut rx) = unbounded();
     server_state.lock().await.add_player(player, tx.clone()).await;
+    if let Some((p1,p2)) = mm.lock().await.match_player().await {
+        // should update when I match players
+        let game = GameSession::new(p1, p2);
+        server_state.lock().await.add_session(&p1, &p2, game).await;
+    }
     spawn(async move {
         while let Some(msg) = rx.next().await {
            if ws_sender.send(Message::Text(msg)).await.is_err() {
@@ -198,7 +203,7 @@ async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_st
             println!("Received message from player {:?} : {}",player,txt);
             let mov : Result<Move,_> = serde_json::from_str(&txt);
             let c = server_state.lock().await.get_session(&player).await;
-            if mov.is_err() && c.is_none(){
+            if mov.is_err() {
                 server_state.lock().await.player_to_character.write().await.insert(player, txt);
                 continue;
             }
@@ -247,17 +252,7 @@ pub async fn server(addr : impl ToSocketAddrs) -> Result<()>{
                 println!("Character selected by player : {} is {}",new_player,charac);
                 state_clone.lock().await.player_to_character.write().await.insert(new_player, charac.to_string());
             }
-            // well new problem is => I want input from the user related to characters they have
-            // selected, but the way I'm using game session now, I can't get the characters
-            //handle_connection(websocket, &state_clone, new_player).await;
-            // but having handle_connection before creating game session means I will never get to
-            // it
-            if let Some((p1,p2)) = mm_clone.lock().await.match_player().await {
-                // should update when I match players
-                let game = GameSession::new(p1, p2);
-                state_clone.lock().await.add_session(&p1, &p2, game).await;
-            }
-            handle_connection(websocket, &state_clone, new_player).await;
+            handle_connection(websocket, &state_clone, new_player, &mm_clone).await;
         });
     }
     Ok(())

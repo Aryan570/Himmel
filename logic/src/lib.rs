@@ -138,8 +138,9 @@ impl ServerState {
         i_t_s.insert(*p1, game_session.clone());
         i_t_s.insert(*p2, game_session);
         let players = self.players.read().await;
-        let p1_char = self.player_to_character.read().await.get(p1).expect("p1_char cannot be None").to_string();
-        let p2_char = self.player_to_character.read().await.get(p2).expect("p2_char caanot be None").to_string();
+        let l =  self.player_to_character.read().await;
+        let p1_char = l.get(p1).expect("p1_char cannot be None").to_string();
+        let p2_char = l.get(p2).expect("p2_char caanot be None").to_string();
         let msg = serde_json::to_string(&Move::new(p1_char,p2_char)).expect("Couldn't convert to Json String"); 
         if let Some(mut sender) = players.get(p1) {
             if sender.send(msg.clone()).await.is_ok(){
@@ -221,10 +222,11 @@ async fn handle_move(game_session : &GameSession, server_state : &Arc<Mutex<Serv
         let msg = serde_json::to_string(&data).expect("cannot convert the move to the serde string"); 
         // parse the data as struct => Move , then call Move.calculate
         // then convert it to JSON String, using serde_json, to transport on network
-        if server_state.lock().await.send_to_player(&id, msg.clone()).await {
+        let l = server_state.lock().await;
+        if l.send_to_player(&id, msg.clone()).await {
             println!("Move sent to : {:?}",id);
         }
-        if server_state.lock().await.send_to_player(&player, msg).await {
+        if l.send_to_player(&player, msg).await {
             println!("Move sent to : {:?}",player);
             return;
         }

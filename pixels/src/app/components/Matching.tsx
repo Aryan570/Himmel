@@ -74,39 +74,39 @@ const Matching = (props: { char: string }) => {
         return (
             <div className='flex justify-center items-center h-screen'>
                 <div className='flex justify-center items-center h-2/3 w-2/3 bg-gray-200 rounded-2xl'>
-                    <div className='flex flex-col h-full w-1/2 ml-3'>
-                        <div className='h-1/6 w-3/4'>
+                    <div className='flex flex-col h-full w-1/2'>
+                        <div className='h-1/6 w-3/4 ml-3'>
                             <p className='text-orange-600'>{players.charac_p1}</p>
-                            <progress className='' max={100} value={players.h1}></progress>
+                            <progress className='overflow-hidden rounded-2xl h-3' max={100} value={players.h1}></progress>
                         </div>
                         <div className='flex h-5/6'>
                             <div className='flex flex-col basis-1/6'>
-                                <button value={0} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500' disabled={(1 & (players.locked << 0)) && !players.attacker ? true : false}>FA</button>
-                                <button value={1} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500' disabled={(1 & (players.locked << 1)) && !players.attacker ? true : false}>AB</button>
-                                <button value={2} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500' disabled={(1 & (players.locked << 2)) && !players.attacker ? true : false}>AD</button>
-                                <button value={3} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500' disabled={(1 & (players.locked << 3)) && !players.attacker ? true : false}>AR</button>
-                                <button value={4} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500' disabled={(1 & (players.locked << 4)) && !players.attacker ? true : false}>NN</button>
+                                <button value={0} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-r-2xl' disabled={(1 & (players.locked << 0)) && !players.attacker ? true : false}>FA</button>
+                                <button value={1} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-r-2xl' disabled={(1 & (players.locked << 1)) && !players.attacker ? true : false}>AB</button>
+                                <button value={2} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-r-2xl' disabled={(1 & (players.locked << 2)) && !players.attacker ? true : false}>AD</button>
+                                <button value={3} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-r-2xl' disabled={(1 & (players.locked << 3)) && !players.attacker ? true : false}>AR</button>
+                                <button value={4} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-r-2xl' disabled={(1 & (players.locked << 4)) && !players.attacker ? true : false}>NN</button>
                             </div>
                             <div className='flex justify-center items-center basis-5/6'>
                                 <Image src={`/${players.charac_p1}.gif`} className='brightness-75' alt='character_1' height={100} width={100} />
                             </div>
                         </div>
                     </div>
-                    <div className='flex flex-col h-full w-1/2 mr-3'>
-                        <div className='h-1/6 text-right'>
+                    <div className='flex flex-col h-full w-1/2'>
+                        <div className='h-1/6 text-right mr-3'>
                             <p className='text-orange-600'>{players.charac_p2}</p>
-                            <progress max={100} value={players.h2}></progress>
+                            <progress className='overflow-hidden h-3 rounded-2xl' max={100} value={players.h2}></progress>
                         </div>
                         <div className='flex h-5/6'>
                             <div className='flex justify-center items-center basis-5/6'>
                                 <Image className='transform -scale-x-100 brightness-75' src={`/${players.charac_p2}.gif`} alt='character_1' height={100} width={100} />
                             </div>
                             <div className='flex flex-col basis-1/6'>
-                                <button value={0} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500' disabled={(1 & (players.locked << 0)) && players.attacker ? true : false}>FA</button>
-                                <button value={1} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500' disabled={(1 & (players.locked << 1)) && players.attacker ? true : false}>AB</button>
-                                <button value={2} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500' disabled={(1 & (players.locked << 2)) && players.attacker ? true : false}>AD</button>
-                                <button value={3} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500' disabled={(1 & (players.locked << 3)) && players.attacker ? true : false}>AR</button>
-                                <button value={4} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500' disabled={(1 & (players.locked << 4)) && players.attacker ? true : false}>NN</button>
+                                <button value={0} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-l-2xl' disabled={(1 & (players.locked << 0)) && players.attacker ? true : false}>FA</button>
+                                <button value={1} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-l-2xl' disabled={(1 & (players.locked << 1)) && players.attacker ? true : false}>AB</button>
+                                <button value={2} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-l-2xl' disabled={(1 & (players.locked << 2)) && players.attacker ? true : false}>AD</button>
+                                <button value={3} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-l-2xl' disabled={(1 & (players.locked << 3)) && players.attacker ? true : false}>AR</button>
+                                <button value={4} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-l-2xl' disabled={(1 & (players.locked << 4)) && players.attacker ? true : false}>NN</button>
                             </div>
                         </div>
                     </div>

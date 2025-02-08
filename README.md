@@ -11,6 +11,7 @@ I can&#39;t make sprites myself so I have to surf internet and find out packs th
 
 > If you want to run it right now
 Clone the project and run the following commands
+
     cargo run
     yarn dev
 

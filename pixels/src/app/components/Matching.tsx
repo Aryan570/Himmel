@@ -77,7 +77,7 @@ const Matching = (props: { char: string }) => {
                     <div className='flex flex-col h-full w-1/2 ml-3'>
                         <div className='h-1/6 w-3/4'>
                             <p className='text-orange-600'>{players.charac_p1}</p>
-                            <progress value={players.h1}></progress>
+                            <progress className='' max={100} value={players.h1}></progress>
                         </div>
                         <div className='flex h-5/6'>
                             <div className='flex flex-col basis-1/6'>
@@ -95,7 +95,7 @@ const Matching = (props: { char: string }) => {
                     <div className='flex flex-col h-full w-1/2 mr-3'>
                         <div className='h-1/6 text-right'>
                             <p className='text-orange-600'>{players.charac_p2}</p>
-                            <progress value={players.h2}></progress>
+                            <progress max={100} value={players.h2}></progress>
                         </div>
                         <div className='flex h-5/6'>
                             <div className='flex justify-center items-center basis-5/6'>

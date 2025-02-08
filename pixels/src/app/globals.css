@@ -56,3 +56,26 @@ body {
     0px 8px
   );
 }
+
+progress {
+  background-color: #a92d2d;
+  overflow: hidden;
+}
+
+/* Style the progress bar value (filled part) in WebKit browsers (Chrome, Safari) */
+progress::-webkit-progress-value {
+  background-color: #088706; /* Red color for the filled part */
+  border-radius: 8px;
+  box-shadow: 2px 2px 2px 2px #05832d;
+}
+
+/* Style the progress bar track (unfilled part) in WebKit browsers */
+progress::-webkit-progress-bar {
+  background-color: #a92d2d;
+}
+
+/* Style the progress bar value (filled part) in Firefox */
+progress::-moz-progress-bar {
+  background-color: #0d990b;
+  border-radius: 8px; /* Match the rounded corners */
+}

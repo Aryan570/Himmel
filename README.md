@@ -14,3 +14,4 @@ Clone the project and run the following commands
     cargo run
     yarn dev
 
+![sonic_kaz](https://github.com/user-attachments/assets/14f248fa-6be5-4f18-a289-2079df33511f)

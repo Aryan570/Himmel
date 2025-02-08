@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import React, { BaseSyntheticEvent, useEffect, useState } from 'react'
 // after the move => How will I access the websocket connection?
+// there should also be another flag where I disable all the buttons => also if user try to check through dev tools, return from handle_click
 export type Move = {
     charac_p1: string | undefined,
     charac_p2: string | undefined,
@@ -81,11 +82,11 @@ const Matching = (props: { char: string }) => {
                         </div>
                         <div className='flex h-5/6'>
                             <div className='flex flex-col basis-1/6'>
-                                <button value={0} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-r-2xl' disabled={(1 & (players.locked << 0)) && !players.attacker ? true : false}>FA</button>
-                                <button value={1} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-r-2xl' disabled={(1 & (players.locked << 1)) && !players.attacker ? true : false}>AB</button>
-                                <button value={2} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-r-2xl' disabled={(1 & (players.locked << 2)) && !players.attacker ? true : false}>AD</button>
-                                <button value={3} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-r-2xl' disabled={(1 & (players.locked << 3)) && !players.attacker ? true : false}>AR</button>
-                                <button value={4} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-r-2xl' disabled={(1 & (players.locked << 4)) && !players.attacker ? true : false}>NN</button>
+                                <button value={0} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-r-2xl' disabled={(1 & (players.locked << 0)) && !players.attacker ? true : false}>Mend</button>
+                                <button value={1} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-r-2xl' disabled={(1 & (players.locked << 1)) && !players.attacker ? true : false}>Hex</button>
+                                <button value={2} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-r-2xl' disabled={(1 & (players.locked << 2)) && !players.attacker ? true : false}>Wall</button>
+                                <button value={3} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-r-2xl' disabled={(1 & (players.locked << 3)) && !players.attacker ? true : false}>TODO</button>
+                                <button value={4} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-r-2xl' disabled={(1 & (players.locked << 4)) && !players.attacker ? true : false}>TODO</button>
                             </div>
                             <div className='flex justify-center items-center basis-5/6'>
                                 <Image src={`/${players.charac_p1}.gif`} className='brightness-75' alt='character_1' height={100} width={100} />
@@ -102,11 +103,11 @@ const Matching = (props: { char: string }) => {
                                 <Image className='transform -scale-x-100 brightness-75' src={`/${players.charac_p2}.gif`} alt='character_1' height={100} width={100} />
                             </div>
                             <div className='flex flex-col basis-1/6'>
-                                <button value={0} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-l-2xl' disabled={(1 & (players.locked << 0)) && players.attacker ? true : false}>FA</button>
-                                <button value={1} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-l-2xl' disabled={(1 & (players.locked << 1)) && players.attacker ? true : false}>AB</button>
-                                <button value={2} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-l-2xl' disabled={(1 & (players.locked << 2)) && players.attacker ? true : false}>AD</button>
-                                <button value={3} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-l-2xl' disabled={(1 & (players.locked << 3)) && players.attacker ? true : false}>AR</button>
-                                <button value={4} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-l-2xl' disabled={(1 & (players.locked << 4)) && players.attacker ? true : false}>NN</button>
+                                <button value={0} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-l-2xl' disabled={(1 & (players.locked << 0)) && players.attacker ? true : false}>Mend</button>
+                                <button value={1} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-l-2xl' disabled={(1 & (players.locked << 1)) && players.attacker ? true : false}>Hex</button>
+                                <button value={2} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-l-2xl' disabled={(1 & (players.locked << 2)) && players.attacker ? true : false}>Wall</button>
+                                <button value={3} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-l-2xl' disabled={(1 & (players.locked << 3)) && players.attacker ? true : false}>TODO</button>
+                                <button value={4} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-l-2xl' disabled={(1 & (players.locked << 4)) && players.attacker ? true : false}>TODO</button>
                             </div>
                         </div>
                     </div>

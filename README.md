@@ -1,7 +1,7 @@
 > Under Construction...
 
 ### Himmel
-This is a turn-based game with server written in Rust and frontend in NextJS.
+This is a turn-based online game you can play with your friend, with server written in Rust and frontend in NextJS.
 
 > Currently there is no way to store the score etc.. I might have to use a database in future for authentication and character collections.
 

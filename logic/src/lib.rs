@@ -23,6 +23,7 @@ struct Move {
     move_type : u8, // only from 1 -> 5 (Some moves add buffs and debuffs, with the damage too) =>
     // 0 if initiliasing the object
     locked : u8, // => mask that tells you, which powers are locked & which are not
+    disable_all : bool, // => might change to some other character in future
 }
 // say buff looks like this int bits -> (can be only 1 or 0, but the abilities depends on
 // characters)
@@ -41,8 +42,8 @@ impl Move {
     // choose character from a list and I send connection request with Character to the server,
     // then again I store the Information according to Uuid in the Server_State | Something to
     // think about for sure.
-    fn new(c1 : String, c2 : String) -> Self{
-        return Move { charac_p1: c1, charac_p2: c2, h1: 100, h2: 100, buffs_player_1: 0, buffs_player_2: 0, debuffs_player_1: 0, debuffs_player_2: 0, attacker: true, move_type: 0, locked: 0 }
+    fn new(c1 : &String, c2 : &String, dis : bool) -> Self{
+        return Move { charac_p1: c1.to_string(), charac_p2: c2.to_string(), h1: 100, h2: 100, buffs_player_1: 0, buffs_player_2: 0, debuffs_player_1: 0, debuffs_player_2: 0, attacker: dis, move_type: 0, locked: 0 , disable_all : dis}
     }
     fn calculate(&mut self){
         let mut diff = 0;
@@ -141,14 +142,15 @@ impl ServerState {
         let l =  self.player_to_character.read().await;
         let p1_char = l.get(p1).expect("p1_char cannot be None").to_string();
         let p2_char = l.get(p2).expect("p2_char caanot be None").to_string();
-        let msg = serde_json::to_string(&Move::new(p1_char,p2_char)).expect("Couldn't convert to Json String"); 
+        let msg1 = serde_json::to_string(&Move::new(&p1_char,&p2_char,true)).expect("Couldn't convert to Json String");
+        let msg2 = serde_json::to_string(&Move::new(&p1_char,&p2_char,false)).expect("Couldn't convert to Json String"); 
         if let Some(mut sender) = players.get(p1) {
-            if sender.send(msg.clone()).await.is_ok(){
+            if sender.send(msg1).await.is_ok(){
                 println!("Sent to player : {}",p1);
             }
         }
         if let Some(mut sender) = players.get(p2) {
-            if sender.send(msg).await.is_ok(){
+            if sender.send(msg2).await.is_ok(){
                 println!("Sent to player : {}",p2);
             }
         }

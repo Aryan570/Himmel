@@ -16,7 +16,8 @@ export type Move = {
     debuffs_player_2: number,
     attacker: boolean,
     move_type: number,
-    locked: number
+    locked: number,
+    disable_all : boolean,
 }
 const Matching = (props: { char: string }) => {
     const [sock, setsock] = useState<WebSocket | undefined>(undefined);
@@ -32,7 +33,8 @@ const Matching = (props: { char: string }) => {
             debuffs_player_2: 0,
             attacker: true,
             move_type: -1,
-            locked: 0
+            locked: 0,
+            disable_all : true
         }
     );
     const [found, setfound] = useState(false);
@@ -44,6 +46,7 @@ const Matching = (props: { char: string }) => {
         let to_send = JSON.stringify(tmp);
         sock?.send(to_send);
     }
+    // didnot think that through
     useEffect(() => {
         const socket = new WebSocket("ws://127.0.0.1:8000");
         socket.onopen = () => {
@@ -52,13 +55,13 @@ const Matching = (props: { char: string }) => {
             console.log(props.char);
             socket.send(props.char); // what would this do actually? => I will store (player => character)
             setsock(socket);
-        }
-        socket.onmessage = (e: MessageEvent) => {
-            const data = JSON.parse(e.data);
-            console.log(data);
-            setfound(true);
-            setplayers(data);
-            console.log(data);
+            socket.onmessage = (e: MessageEvent) => {
+                const data = JSON.parse(e.data);
+                console.log(data);
+                setfound(true);
+                setplayers(data);
+                console.log(data);
+            }
         }
 
         return () => {
@@ -74,7 +77,8 @@ const Matching = (props: { char: string }) => {
         // |------|------|
         return (
             <div className='flex justify-center items-center h-screen'>
-                <div className='flex justify-center items-center h-2/3 w-2/3 bg-gray-200 rounded-2xl'>
+                {/*bg-[url(/background_final_2.gif)] bg-no-repeat bg-cover*/}
+                <div className='flex justify-center items-center h-2/3 w-2/3 bg-gray-200 rounded-2xl '>
                     <div className='flex flex-col h-full w-1/2'>
                         <div className='h-1/6 w-3/4 ml-3'>
                             <p className='text-orange-600'>{players.charac_p1}</p>
@@ -82,11 +86,11 @@ const Matching = (props: { char: string }) => {
                         </div>
                         <div className='flex h-5/6'>
                             <div className='flex flex-col basis-1/6'>
-                                <button value={0} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-r-2xl' disabled={(1 & (players.locked << 0)) && !players.attacker ? true : false}>Mend</button>
-                                <button value={1} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-r-2xl' disabled={(1 & (players.locked << 1)) && !players.attacker ? true : false}>Hex</button>
-                                <button value={2} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-r-2xl' disabled={(1 & (players.locked << 2)) && !players.attacker ? true : false}>Wall</button>
-                                <button value={3} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-r-2xl' disabled={(1 & (players.locked << 3)) && !players.attacker ? true : false}>TODO</button>
-                                <button value={4} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-r-2xl' disabled={(1 & (players.locked << 4)) && !players.attacker ? true : false}>TODO</button>
+                                <button value={0} onClick={to_rust} className={`text-slate-50 my-1 ${((players.locked & (1 << 0)) || !players.attacker) || players.disable_all ? 'bg-slate-500' : 'bg-orange-400'} rounded-r-2xl`} disabled={((players.locked & (1 << 0)) || !players.attacker) || players.disable_all ? true : false}>Mend</button>
+                                <button value={1} onClick={to_rust} className={`text-slate-50 my-1 ${((players.locked & (1 << 1)) || !players.attacker) || players.disable_all ? 'bg-slate-500' : 'bg-orange-400'} rounded-r-2xl`} disabled={((players.locked & (1 << 1)) || !players.attacker) || players.disable_all ? true : false}>Hex</button>
+                                <button value={2} onClick={to_rust} className={`text-slate-50 my-1 ${((players.locked & (1 << 2)) || !players.attacker) || players.disable_all ? 'bg-slate-500' : 'bg-orange-400'} rounded-r-2xl`} disabled={((players.locked & (1 << 2)) || !players.attacker) || players.disable_all ? true : false}>Wall</button>
+                                <button value={3} onClick={to_rust} className={`text-slate-50 my-1 ${((players.locked & (1 << 3)) || !players.attacker) || players.disable_all ? 'bg-slate-500' : 'bg-orange-400'} rounded-r-2xl`} disabled={((players.locked & (1 << 3)) || !players.attacker) || players.disable_all ? true : false}>TODO</button>
+                                <button value={4} onClick={to_rust} className={`text-slate-50 my-1 ${((players.locked & (1 << 4)) || !players.attacker) || players.disable_all ? 'bg-slate-500' : 'bg-orange-400'} rounded-r-2xl`} disabled={((players.locked & (1 << 4)) || !players.attacker) || players.disable_all ? true : false}>TODO</button>
                             </div>
                             <div className='flex justify-center items-center basis-5/6'>
                                 <Image src={`/${players.charac_p1}.gif`} className='brightness-75' alt='character_1' height={100} width={100} />
@@ -103,11 +107,11 @@ const Matching = (props: { char: string }) => {
                                 <Image className='transform -scale-x-100 brightness-75' src={`/${players.charac_p2}.gif`} alt='character_1' height={100} width={100} />
                             </div>
                             <div className='flex flex-col basis-1/6'>
-                                <button value={0} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-l-2xl' disabled={(1 & (players.locked << 0)) && players.attacker ? true : false}>Mend</button>
-                                <button value={1} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-l-2xl' disabled={(1 & (players.locked << 1)) && players.attacker ? true : false}>Hex</button>
-                                <button value={2} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-l-2xl' disabled={(1 & (players.locked << 2)) && players.attacker ? true : false}>Wall</button>
-                                <button value={3} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-l-2xl' disabled={(1 & (players.locked << 3)) && players.attacker ? true : false}>TODO</button>
-                                <button value={4} onClick={to_rust} className='text-slate-50 my-1 bg-slate-500 rounded-l-2xl' disabled={(1 & (players.locked << 4)) && players.attacker ? true : false}>TODO</button>
+                                <button value={0} onClick={to_rust} className={`text-slate-50 my-1 ${((players.locked & (1 << 0)) || players.attacker) || players.disable_all ? 'bg-slate-500' : 'bg-orange-400'} rounded-l-2xl`} disabled={((players.locked & (1 << 0)) || players.attacker) || players.disable_all ? true : false}>Mend</button>
+                                <button value={1} onClick={to_rust} className={`text-slate-50 my-1 ${((players.locked & (1 << 1)) || players.attacker) || players.disable_all ? 'bg-slate-500' : 'bg-orange-400'} rounded-l-2xl`} disabled={((players.locked & (1 << 1)) || players.attacker) || players.disable_all ? true : false}>Hex</button>
+                                <button value={2} onClick={to_rust} className={`text-slate-50 my-1 ${((players.locked & (1 << 2)) || players.attacker) || players.disable_all ? 'bg-slate-500' : 'bg-orange-400'} rounded-l-2xl`} disabled={((players.locked & (1 << 2)) || players.attacker) || players.disable_all ? true : false}>Wall</button>
+                                <button value={3} onClick={to_rust} className={`text-slate-50 my-1 ${((players.locked & (1 << 3)) || players.attacker) || players.disable_all ? 'bg-slate-500' : 'bg-orange-400'} rounded-l-2xl`} disabled={((players.locked & (1 << 3)) || players.attacker) || players.disable_all ? true : false}>TODO</button>
+                                <button value={4} onClick={to_rust} className={`text-slate-50 my-1 ${((players.locked & (1 << 4)) || players.attacker) || players.disable_all ? 'bg-slate-500' : 'bg-orange-400'} rounded-l-2xl`} disabled={((players.locked & (1 << 4)) || players.attacker) || players.disable_all ? true : false}>TODO</button>
                             </div>
                         </div>
                     </div>

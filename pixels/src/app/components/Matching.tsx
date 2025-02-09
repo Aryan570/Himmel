@@ -34,7 +34,7 @@ const Matching = (props: { char: string }) => {
             attacker: true,
             move_type: -1,
             locked: 0,
-            disable_all : true
+            disable_all : false
         }
     );
     const [found, setfound] = useState(false);
@@ -57,10 +57,10 @@ const Matching = (props: { char: string }) => {
             setsock(socket);
             socket.onmessage = (e: MessageEvent) => {
                 const data = JSON.parse(e.data);
-                console.log(data);
+                console.log("Here is the data ? : ",data);
                 setfound(true);
                 setplayers(data);
-                console.log(data);
+                // console.log(data);
             }
         }
 

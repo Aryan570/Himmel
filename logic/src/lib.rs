@@ -43,7 +43,7 @@ impl Move {
     // then again I store the Information according to Uuid in the Server_State | Something to
     // think about for sure.
     fn new(c1 : &String, c2 : &String, dis : bool) -> Self{
-        return Move { charac_p1: c1.to_string(), charac_p2: c2.to_string(), h1: 100, h2: 100, buffs_player_1: 0, buffs_player_2: 0, debuffs_player_1: 0, debuffs_player_2: 0, attacker: dis, move_type: 0, locked: 0 , disable_all : dis}
+        return Move { charac_p1: c1.to_string(), charac_p2: c2.to_string(), h1: 100, h2: 100, buffs_player_1: 0, buffs_player_2: 0, debuffs_player_1: 0, debuffs_player_2: 0, attacker: !dis, move_type: 0, locked: 0 , disable_all : dis}
     }
     fn calculate(&mut self){
         let mut diff = 0;
@@ -142,8 +142,8 @@ impl ServerState {
         let l =  self.player_to_character.read().await;
         let p1_char = l.get(p1).expect("p1_char cannot be None").to_string();
         let p2_char = l.get(p2).expect("p2_char caanot be None").to_string();
-        let msg1 = serde_json::to_string(&Move::new(&p1_char,&p2_char,true)).expect("Couldn't convert to Json String");
-        let msg2 = serde_json::to_string(&Move::new(&p1_char,&p2_char,false)).expect("Couldn't convert to Json String"); 
+        let msg1 = serde_json::to_string(&Move::new(&p1_char,&p2_char,false)).expect("Couldn't convert to Json String");
+        let msg2 = serde_json::to_string(&Move::new(&p1_char,&p2_char,true)).expect("Couldn't convert to Json String"); 
         if let Some(mut sender) = players.get(p1) {
             if sender.send(msg1).await.is_ok(){
                 println!("Sent to player : {}",p1);

@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 mod characters;
 use std::{collections::{HashMap, VecDeque}, sync::Arc};
+use characters::CHARS;
 use serde::{Serialize,Deserialize};
 use futures::{channel::mpsc::{unbounded, UnboundedSender}, SinkExt, StreamExt};
 use uuid::Uuid;
@@ -52,27 +53,29 @@ impl Move {
         match self.attacker {
             true => {
                 let tmp = self.buffs_player_1;
+                let curr_char = CHARS.get(&self.charac_p1).expect("Why Character is not present in CHARS, when attacker is p1");
                 if(tmp & (1 << 0)) == 1{ att += 4; } // should be added according to character
                 if(tmp & (1 << 1)) == 1{ diff -= 4; } 
                 if(tmp & (1 << 2)) == 1{ diff += 2; } 
                 // Do a base damage for all the attacks
-                let base = -20;
+                let base = curr_char.basic_attack;
                 // we need to do something about Debuffs
                 // Update the Current object
-                self.h2 = (base + diff + self.h2).max(0);
-                self.h1 = (self.h1 + att).max(100);
+                self.h2 = ( diff + self.h2 - base as i8).max(0);
+                self.h1 = (self.h1 + att as i8).max(100);
             }
             _ => {
                 let tmp = self.buffs_player_2;
+                let curr_char = CHARS.get(&self.charac_p2).expect("Why Character is not present in CHARS, when attacker is p2");
                 if(tmp & (1 << 0)) == 1{ att += 4; } // should be added according to character
-                if(tmp & (1 << 1)) == 1{ diff -= 4; } 
+                if(tmp & (1 << 1)) == 1{ diff -= 4; }
                 if(tmp & (1 << 2)) == 1{ diff += 2; } 
                 // Do a base damage for all the attacks
-                let base = -20;
+                let base = curr_char.basic_attack;
                 // we need to do something about Debuffs
                 // Update the Current object
-                self.h1 = (base + diff + self.h2).max(0);
-                self.h2 = (self.h1 + att).max(100);
+                self.h1 = (diff + self.h1 - base as i8).max(0);
+                self.h2 = (self.h1 + att as i8).max(100);
             }
         }
     }

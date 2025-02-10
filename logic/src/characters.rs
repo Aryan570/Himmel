@@ -1,7 +1,8 @@
 use phf::phf_map;
+#[derive(Clone)]
 pub struct Character {
-    basic_attack : u8,
-    debuff : u8,
+    pub basic_attack : u8,
+    pub debuff : u8,
 }
 
 macro_rules! c {

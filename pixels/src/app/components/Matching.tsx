@@ -3,6 +3,7 @@
 import { Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import React, { BaseSyntheticEvent, useEffect, useState } from 'react'
+import End from './End'
 // after the move => How will I access the websocket connection?
 // there should also be another flag where I disable all the buttons => also if user try to check through dev tools, return from handle_click
 export type Move = {
@@ -17,10 +18,11 @@ export type Move = {
     attacker: boolean,
     move_type: number,
     locked: number,
-    disable_all : boolean,
+    disable_all: boolean,
 }
 const Matching = (props: { char: string }) => {
     const [sock, setsock] = useState<WebSocket | undefined>(undefined);
+    const [over, setover] = useState<string>("");
     const [players, setplayers] = useState<Move>(
         {
             charac_p1: undefined,
@@ -34,14 +36,14 @@ const Matching = (props: { char: string }) => {
             attacker: true,
             move_type: -1,
             locked: 0,
-            disable_all : false
+            disable_all: false
         }
     );
     const [found, setfound] = useState(false);
     function to_rust(e: BaseSyntheticEvent) {
         let val = e.currentTarget.value;
         let tmp = players;
-        tmp.move_type = parseInt(val,10);
+        tmp.move_type = parseInt(val, 10);
         // set attacker as well
         let to_send = JSON.stringify(tmp);
         sock?.send(to_send);
@@ -55,13 +57,15 @@ const Matching = (props: { char: string }) => {
             console.log(props.char);
             socket.send(props.char); // what would this do actually? => I will store (player => character)
             setsock(socket);
-            socket.onmessage = (e: MessageEvent) => {
-                const data = JSON.parse(e.data);
-                console.log("Here is the data ? : ",data);
-                setfound(true);
-                setplayers(data);
-                // console.log(data);
-            }
+        }
+        socket.onmessage = (e: MessageEvent) => {
+            const data: Move = JSON.parse(e.data);
+            if(data.h1 === 0) setover(data.charac_p1!);
+            else if(data.h2 === 0) setover(data.charac_p2!);
+            console.log("Here is the data ? : ", data);
+            setfound(true);
+            setplayers(data);
+            // console.log(data);
         }
 
         return () => {
@@ -69,6 +73,7 @@ const Matching = (props: { char: string }) => {
             setsock(undefined);
         }
     }, [props.char])
+    if (over.length !== 0) return (<End character={over} />)
     if (found) {
         // _______________
         // |      |      |

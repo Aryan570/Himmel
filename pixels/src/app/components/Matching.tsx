@@ -41,7 +41,7 @@ const Matching = (props: { char: string }) => {
     function to_rust(e: BaseSyntheticEvent) {
         let val = e.currentTarget.value;
         let tmp = players;
-        tmp.move_type = val;
+        tmp.move_type = parseInt(val,10);
         // set attacker as well
         let to_send = JSON.stringify(tmp);
         sock?.send(to_send);

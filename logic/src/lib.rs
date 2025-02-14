@@ -61,7 +61,7 @@ impl Move {
                 // we need to do something about Debuffs
                 // Update the Current object
                 self.h2 = ( diff + self.h2 - base as i8).max(0);
-                self.h1 = (self.h1 + att as i8).max(100);
+                self.h1 = (self.h1 + att as i8).min(100);
             }
             _ => {
                 let tmp = self.buffs_player_2;
@@ -74,7 +74,7 @@ impl Move {
                 // we need to do something about Debuffs
                 // Update the Current object
                 self.h1 = (diff + self.h1 - base as i8).max(0);
-                self.h2 = (self.h1 + att as i8).max(100);
+                self.h2 = (self.h1 + att as i8).min(100);
             }
         }
         self.attacker = !self.attacker;
@@ -234,10 +234,10 @@ async fn handle_move(game_session : &GameSession, server_state : &Arc<Mutex<Serv
         // parse the data as struct => Move , then call Move.calculate
         // then convert it to JSON String, using serde_json, to transport on network
         let l = server_state.lock().await;
-        if l.send_to_player(&id, msg1).await {
+        if l.send_to_player(&id, msg2).await {
             println!("Move sent to : {:?}",id);
         }
-        if l.send_to_player(&player, msg2).await {
+        if l.send_to_player(&player, msg1).await {
             println!("Move sent to : {:?}",player);
             return;
         }

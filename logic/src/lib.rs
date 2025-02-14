@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 mod characters;
 use std::{collections::{HashMap, VecDeque}, sync::Arc};
 use characters::CHARS;
@@ -78,6 +77,8 @@ impl Move {
                 self.h2 = (self.h1 + att as i8).max(100);
             }
         }
+        self.attacker = !self.attacker;
+        self.disable_all = !self.disable_all;
     }
 }
 
@@ -211,28 +212,32 @@ async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_st
             let mov : Result<Move,_> = serde_json::from_str(&txt);
             let c = server_state.lock().await.get_session(&player).await;
             if mov.is_err() {
+                println!("Why the error");
                 server_state.lock().await.player_to_character.write().await.insert(player, txt);
                 continue;
             }
             if let Some(session) = c {
                 println!("Here!! I'm");
-                handle_move(&session, &server_state, player, mov.unwrap()).await;
+                handle_move(&session, &server_state, player, &mut mov.unwrap()).await;
             }
         }
     }
     server_state.lock().await.remove_player(&player).await;
 }
 
-async fn handle_move(game_session : &GameSession, server_state : &Arc<Mutex<ServerState>>, player : PlayerId, data : Move){
+async fn handle_move(game_session : &GameSession, server_state : &Arc<Mutex<ServerState>>, player : PlayerId, data : &mut Move){
     if let Some(id) = game_session.get_opponent(&player) {
-        let msg = serde_json::to_string(&data).expect("cannot convert the move to the serde string"); 
+        data.calculate();
+        let msg1 = serde_json::to_string(&data).expect("cannot convert the move to the serde string");
+        data.disable_all = !data.disable_all;
+        let msg2 = serde_json::to_string(&data).expect("cannot convert the move to the serde string");
         // parse the data as struct => Move , then call Move.calculate
         // then convert it to JSON String, using serde_json, to transport on network
         let l = server_state.lock().await;
-        if l.send_to_player(&id, msg.clone()).await {
+        if l.send_to_player(&id, msg1).await {
             println!("Move sent to : {:?}",id);
         }
-        if l.send_to_player(&player, msg).await {
+        if l.send_to_player(&player, msg2).await {
             println!("Move sent to : {:?}",player);
             return;
         }

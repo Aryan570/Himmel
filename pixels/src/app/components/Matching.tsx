@@ -60,8 +60,8 @@ const Matching = (props: { char: string }) => {
         }
         socket.onmessage = (e: MessageEvent) => {
             const data: Move = JSON.parse(e.data);
-            if(data.h1 === 0) setover(data.charac_p1!);
-            else if(data.h2 === 0) setover(data.charac_p2!);
+            if(data.h1 === 0) setover(data.charac_p2!);
+            else if(data.h2 === 0) setover(data.charac_p1!);
             console.log("Here is the data ? : ", data);
             setfound(true);
             setplayers(data);
@@ -70,10 +70,13 @@ const Matching = (props: { char: string }) => {
 
         return () => {
             socket.close(1000, "Client wants to disconnect");
+            socket.onclose = () => {
+                console.log("bye bye rust");
+            }
             setsock(undefined);
         }
     }, [props.char])
-    if (over.length !== 0) return (<End character={over} />)
+    if (over.length !== 0) return (<End character={over} message={players.move_type === 10 ? "Victory is yours!" : "Next time, for sure!"} />)
     if (found) {
         // _______________
         // |      |      |

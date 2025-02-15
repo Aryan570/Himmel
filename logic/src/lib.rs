@@ -228,8 +228,11 @@ async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_st
 async fn handle_move(game_session : &GameSession, server_state : &Arc<Mutex<ServerState>>, player : PlayerId, data : &mut Move){
     if let Some(id) = game_session.get_opponent(&player) {
         data.calculate();
+        if data.h2 == 0 {data.move_type = 10;}
         let msg1 = serde_json::to_string(&data).expect("cannot convert the move to the serde string");
+        if data.move_type == 10 {data.move_type = 20;}
         data.disable_all = !data.disable_all;
+        if data.h1 == 0 {data.move_type = 10;}
         let msg2 = serde_json::to_string(&data).expect("cannot convert the move to the serde string");
         // parse the data as struct => Move , then call Move.calculate
         // then convert it to JSON String, using serde_json, to transport on network

@@ -222,6 +222,7 @@ async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_st
             }
         }
     }
+    println!("player disconnected : {}", player);
     server_state.lock().await.remove_player(&player).await;
 }
 

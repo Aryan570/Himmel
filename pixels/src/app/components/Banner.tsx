@@ -26,7 +26,7 @@ const Banner = () => {
     setis_loading(true);
     setchoose(false);
   }
-  if (is_loading) return <Matching char={chosen} />;
+  if (is_loading) return <Matching char={chosen} banner={setis_loading} />;
   if(choose){
         return (
             <div className='flex justify-center items-center h-screen'>

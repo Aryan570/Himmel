@@ -1,11 +1,8 @@
 // => the movement of the character => sprites, would be hard
 "use client"
-import { Loader2 } from 'lucide-react'
+import { Loader2, RotateCcw } from 'lucide-react'
 import Image from 'next/image'
-import React, { BaseSyntheticEvent, useEffect, useState } from 'react'
-import End from './End'
-// after the move => How will I access the websocket connection?
-// there should also be another flag where I disable all the buttons => also if user try to check through dev tools, return from handle_click
+import React, { useEffect, useState, MouseEvent, SetStateAction, Dispatch } from 'react'
 export type Move = {
     charac_p1: string | undefined,
     charac_p2: string | undefined,
@@ -20,7 +17,7 @@ export type Move = {
     locked: number,
     disable_all: boolean,
 }
-const Matching = (props: { char: string }) => {
+const Matching = (props: { char: string , banner : Dispatch<SetStateAction<boolean>> }) => {
     const [sock, setsock] = useState<WebSocket | undefined>(undefined);
     const [over, setover] = useState<string>("");
     const [players, setplayers] = useState<Move>(
@@ -40,13 +37,17 @@ const Matching = (props: { char: string }) => {
         }
     );
     const [found, setfound] = useState(false);
-    function to_rust(e: BaseSyntheticEvent) {
+    function to_rust(e: MouseEvent<HTMLButtonElement>) {
         let val = e.currentTarget.value;
         let tmp = players;
         tmp.move_type = parseInt(val, 10);
         // set attacker as well
         let to_send = JSON.stringify(tmp);
         sock?.send(to_send);
+    }
+    function handle_click(e : MouseEvent<HTMLButtonElement>){
+        e.preventDefault();
+        props.banner(false);
     }
     // didnot think that through
     useEffect(() => {
@@ -76,7 +77,20 @@ const Matching = (props: { char: string }) => {
             setsock(undefined);
         }
     }, [props.char])
-    if (over.length !== 0) return (<End character={over} message={players.move_type === 10 ? "Victory is yours!" : "Next time, for sure!"} />)
+    if (over.length !== 0){
+        return (
+            <div className='flex justify-center items-center h-screen w-screen'>
+                <div className='flex justify-center items-center h-1/3 w-1/3 bg-gray-200 rounded-2xl'>
+                    <div className='flex flex-col justify-around items-center w-1/3 h-5/6 text-slate-600'>
+                        <div className='mb-1'>{players.move_type === 10 ? "Victory is yours!" : "Next time, for sure!"}</div>
+                        <div className='mb-1'><Image src={`/${over}.gif`} alt='Your Character' height={100} width={100}/></div>
+                        <div><button className='flex' onClick={handle_click}><RotateCcw/> <div>Replay</div></button></div>
+                    </div>
+                </div>
+            </div>
+        )
+        // return (<End character={over} message={players.move_type === 10 ? "Victory is yours!" : "Next time, for sure!"} />)
+    } 
     if (found) {
         // _______________
         // |      |      |

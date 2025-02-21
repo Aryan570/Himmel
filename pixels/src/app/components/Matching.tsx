@@ -18,6 +18,7 @@ export type Move = {
     locked: number,
     disable_all: boolean,
 }
+type MoveKey = "1" | "2" | "3" | "4" | "5";
 const Matching = (props: { char: string , banner : Dispatch<SetStateAction<boolean>> }) => {
     const [sock, setsock] = useState<WebSocket | undefined>(undefined);
     const [over, setover] = useState<string>("");
@@ -43,7 +44,8 @@ const Matching = (props: { char: string , banner : Dispatch<SetStateAction<boole
         // have a custom attribute so that we can differentiate between two player and which player to animate
         let key = players.charac_p1 as keyof typeof moves;
         if(e.currentTarget.dataset.tag == "2") key = players.charac_p2 as keyof typeof moves;
-        let x = moves[key];
+        let arr_ref = e.currentTarget.value as MoveKey;
+        let _x : number[] = moves[key][arr_ref];
         let tmp = players;
         tmp.move_type = parseInt(val, 10);
         // set attacker as well

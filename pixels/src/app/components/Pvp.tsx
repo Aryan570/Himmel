@@ -1,14 +1,15 @@
 "use client"
-import React, { useEffect, useRef } from 'react'
+import React, { Dispatch, SetStateAction, useEffect, useRef } from 'react'
 import moves from '@/data/moves.json'
 import { MoveKey } from './Matching'
 type PvpProps = {
     move_num : MoveKey,
-    character_name : string
+    character_name : string,
     canvas_width? : number,
-    canvas_height? : number
+    canvas_height? : number,
+    move_type : Dispatch<SetStateAction<MoveKey>>
 }
-const Pvp : React.FC<PvpProps> = ({move_num, character_name, canvas_height = 200, canvas_width = 100}) => {
+const Pvp : React.FC<PvpProps> = ({move_num, character_name, canvas_height = 200, canvas_width = 100, move_type}) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -21,7 +22,7 @@ const Pvp : React.FC<PvpProps> = ({move_num, character_name, canvas_height = 200
         canvas.width = canvas_width;
         canvas.height = canvas_height;
         const img = new Image();
-        img.src = `${character_name}.png`;
+        img.src = `/${character_name}.png`;
         let animation_frame : number;
         img.onload = () => {
             let i = 0;
@@ -37,11 +38,13 @@ const Pvp : React.FC<PvpProps> = ({move_num, character_name, canvas_height = 200
                 animation_frame = requestAnimationFrame(animate);
             }
             animate();
+            // might get f'ed up here
+            if(move_num != "0") move_type("0");
         }
         return () => {
             cancelAnimationFrame(animation_frame);
         }
-    }, [character_name, canvas_height, canvas_width, move_num])
+    }, [character_name, canvas_height, canvas_width, move_num, move_type])
     return (
         <canvas ref={canvasRef}></canvas>
     )

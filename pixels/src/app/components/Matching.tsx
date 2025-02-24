@@ -4,6 +4,8 @@ import { Loader2, RotateCcw } from 'lucide-react'
 import Image from 'next/image'
 import React, { useEffect, useState, MouseEvent, SetStateAction, Dispatch } from 'react'
 import moves from '@/data/moves.json'
+import Pvp from './Pvp'
+import { assert } from 'console'
 export type Move = {
     charac_p1: string | undefined,
     charac_p2: string | undefined,
@@ -24,6 +26,8 @@ export type MoveKey = "0" | "1" | "2" | "3" | "4" | "5";
 const Matching = (props: { char: string , banner : Dispatch<SetStateAction<boolean>> }) => {
     const [sock, setsock] = useState<WebSocket | undefined>(undefined);
     const [over, setover] = useState<string>("");
+    const [move_p1, setmove_p1] = useState<MoveKey>("0");
+    const [move_p2, setmove_p2] = useState<MoveKey>("0");
     const [players, setplayers] = useState<Move>(
         {
             charac_p1: undefined,
@@ -44,10 +48,14 @@ const Matching = (props: { char: string , banner : Dispatch<SetStateAction<boole
     function to_rust(e: MouseEvent<HTMLButtonElement>) {
         let val = e.currentTarget.value;
         // have a custom attribute so that we can differentiate between two player and which player to animate
-        let key = players.charac_p1 as keyof typeof moves;
-        if(e.currentTarget.dataset.tag == "2") key = players.charac_p2 as keyof typeof moves;
-        let arr_ref = e.currentTarget.value as MoveKey;
-        let _x : number[] = moves[key][arr_ref];
+        assert(val === "0" || val === "1" ||  val === "2" || val === "3" || val === "4" || val === "5" , "clearly I got some wrong value here, move is clearly wrong");
+        assert(e.currentTarget.dataset.tag === "1" || e.currentTarget.dataset.tag === "2", "tag is wrong");
+        // let key = players.charac_p1 as keyof typeof moves;
+        // if(e.currentTarget.dataset.tag === "2") key = players.charac_p2 as keyof typeof moves;
+        if(e.currentTarget.dataset.tag === "2") setmove_p2(val as MoveKey);
+        else setmove_p1(val as MoveKey);
+        // let arr_ref = e.currentTarget.value as MoveKey;
+        // let _x : number[] = moves[key][arr_ref];
         let tmp = players;
         tmp.move_type = parseInt(val, 10);
         // set attacker as well
@@ -124,7 +132,8 @@ const Matching = (props: { char: string , banner : Dispatch<SetStateAction<boole
                                 <button value={4} data-tag="1" onClick={to_rust} className={`text-slate-50 active:scale-90 ring-4 ring-offset-2 my-1 pixel-corners ${((players.locked & (1 << 4)) || !players.attacker) || players.disable_all ? 'bg-slate-500 ring-slate-600' : 'bg-orange-400 hover:bg-orange-600 ring-orange-700'} rounded-r-2xl`} disabled={((players.locked & (1 << 4)) || !players.attacker) || players.disable_all ? true : false}>TODO</button>
                             </div>
                             <div className='flex justify-center items-center basis-5/6'>
-                                <Image src={`/${players.charac_p1}.gif`} className='brightness-75' alt='character_1' height={100} width={100} />
+                                {/* <Image src={`/${players.charac_p1}.gif`} className='brightness-75' alt='character_1' height={100} width={100} /> */}
+                                <Pvp character_name={players.charac_p1!} move_num={move_p1} move_type={setmove_p1}/>
                             </div>
                         </div>
                     </div>
@@ -135,7 +144,8 @@ const Matching = (props: { char: string , banner : Dispatch<SetStateAction<boole
                         </div>
                         <div className='flex h-5/6 mr-3'>
                             <div className='flex justify-center items-center basis-5/6'>
-                                <Image className='transform -scale-x-100 brightness-75' src={`/${players.charac_p2}.gif`} alt='character_1' height={100} width={100} />
+                                {/* <Image className='transform -scale-x-100 brightness-75' src={`/${players.charac_p2}.gif`} alt='character_1' height={100} width={100} /> */}
+                                <Pvp character_name={players.charac_p2!} move_num={move_p2} move_type={setmove_p2}/>
                             </div>
                             <div className='flex flex-col basis-1/6'>
                                 <button value={0} data-tag="2" onClick={to_rust} className={`text-slate-50 active:scale-90 ring-4 ring-offset-2 my-1 pixel-corners ${((players.locked & (1 << 0)) || players.attacker) || players.disable_all ? 'bg-slate-500 ring-slate-600' : 'bg-orange-400 hover:bg-orange-600 ring-orange-700'} rounded-l-2xl`} disabled={((players.locked & (1 << 0)) || players.attacker) || players.disable_all ? true : false}>Mend</button>

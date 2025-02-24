@@ -29,20 +29,25 @@ const Pvp : React.FC<PvpProps> = ({move_num, character_name, canvas_height = 200
             let stagger_frame = 10;
             let j = 0;
             function animate(){
-                ctx?.clearRect(0,0,canvas_height,canvas_width);
+                ctx?.clearRect(0,0,canvas_width,canvas_height);
                 ctx?.drawImage(img,arr[i],arr[i+1],arr[i+2],arr[i+3],0,0,canvas_width,canvas_height);
                 j++;
                 if(j % stagger_frame == 0) i+=4;
                 j %= stagger_frame;
+                if(move_num !== "0" && i == n){
+                    move_type("0");
+                    return;
+                }
                 i %= n;
                 animation_frame = requestAnimationFrame(animate);
             }
             animate();
             // might get f'ed up here
-            if(move_num != "0") move_type("0");
+            // if(move_num !== "0") move_type("0");
         }
         return () => {
             cancelAnimationFrame(animation_frame);
+            ctx?.clearRect(0,0,canvas_width,canvas_height);
         }
     }, [character_name, canvas_height, canvas_width, move_num, move_type])
     return (

@@ -3,9 +3,7 @@
 import { Loader2, RotateCcw } from 'lucide-react'
 import Image from 'next/image'
 import React, { useEffect, useState, MouseEvent, SetStateAction, Dispatch } from 'react'
-import moves from '@/data/moves.json'
 import Pvp from './Pvp'
-import { assert } from 'console'
 export type Move = {
     charac_p1: string | undefined,
     charac_p2: string | undefined,
@@ -48,8 +46,8 @@ const Matching = (props: { char: string , banner : Dispatch<SetStateAction<boole
     function to_rust(e: MouseEvent<HTMLButtonElement>) {
         let val = e.currentTarget.value;
         // have a custom attribute so that we can differentiate between two player and which player to animate
-        assert(val === "0" || val === "1" ||  val === "2" || val === "3" || val === "4" || val === "5" , "clearly I got some wrong value here, move is clearly wrong");
-        assert(e.currentTarget.dataset.tag === "1" || e.currentTarget.dataset.tag === "2", "tag is wrong");
+        if(!(val === "0" || val === "1" ||  val === "2" || val === "3" || val === "4" || val === "5")) console.log("Wrong val");
+        if(e.currentTarget.dataset.tag !== "1" && e.currentTarget.dataset.tag !== "2") console.log("tag is wrong");
         // let key = players.charac_p1 as keyof typeof moves;
         // if(e.currentTarget.dataset.tag === "2") key = players.charac_p2 as keyof typeof moves;
         if(e.currentTarget.dataset.tag === "2") setmove_p2(val as MoveKey);

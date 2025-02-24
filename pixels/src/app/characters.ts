@@ -15,6 +15,14 @@ export const character_array: ch_array[] = [{
     character : 3,
     character_name: "Sonic",
     description : "lor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco "
+},{
+    character : 4,
+    character_name: "Ghost_Rider",
+    description : "lor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco "
+},{
+    character : 5,
+    character_name: "Mario",
+    description : "lor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco "
 }];
 let n = character_array.length;
 export function get_random() : ch_array{

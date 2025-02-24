@@ -14,5 +14,7 @@ macro_rules! c {
 pub static CHARS : phf::Map<&'static str, Character> = phf_map!{
     "Sonic" => c!(10,3),
     "Some_girl" => c!(8,5),
-    "1" => c!(9,4)
+    "1" => c!(9,4),
+    "Ghost_Rider" => c!(9,9),
+    "Mario" => c!(5,5)
 };

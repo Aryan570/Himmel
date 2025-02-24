@@ -20,7 +20,7 @@ export type Move = {
 }
 // MoveKey => maps to the array in moves => array store numbers such as || start_x || start_y || width_of_picture|| height_of_picture ||
 // 0 reflect the idle state
-type MoveKey = "0" | "1" | "2" | "3" | "4" | "5";
+export type MoveKey = "0" | "1" | "2" | "3" | "4" | "5";
 const Matching = (props: { char: string , banner : Dispatch<SetStateAction<boolean>> }) => {
     const [sock, setsock] = useState<WebSocket | undefined>(undefined);
     const [over, setover] = useState<string>("");

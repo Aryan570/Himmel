@@ -131,7 +131,7 @@ const Matching = (props: { char: string , banner : Dispatch<SetStateAction<boole
                             </div>
                             <div className='flex justify-center items-center basis-5/6'>
                                 {/* <Image src={`/${players.charac_p1}.gif`} className='brightness-75' alt='character_1' height={100} width={100} /> */}
-                                <Pvp character_name={players.charac_p1!} move_num={move_p1} move_type={setmove_p1}/>
+                                <Pvp character_name={players.charac_p1!} move_num={move_p1} move_type={setmove_p1} mirror={false}/>
                             </div>
                         </div>
                     </div>
@@ -143,7 +143,7 @@ const Matching = (props: { char: string , banner : Dispatch<SetStateAction<boole
                         <div className='flex h-5/6 mr-3'>
                             <div className='flex justify-center items-center basis-5/6'>
                                 {/* <Image className='transform -scale-x-100 brightness-75' src={`/${players.charac_p2}.gif`} alt='character_1' height={100} width={100} /> */}
-                                <Pvp character_name={players.charac_p2!} move_num={move_p2} move_type={setmove_p2}/>
+                                <Pvp character_name={players.charac_p2!} move_num={move_p2} move_type={setmove_p2} mirror={true}/>
                             </div>
                             <div className='flex flex-col basis-1/6'>
                                 <button value={0} data-tag="2" onClick={to_rust} className={`text-slate-50 active:scale-90 ring-4 ring-offset-2 my-1 pixel-corners ${((players.locked & (1 << 0)) || players.attacker) || players.disable_all ? 'bg-slate-500 ring-slate-600' : 'bg-orange-400 hover:bg-orange-600 ring-orange-700'} rounded-l-2xl`} disabled={((players.locked & (1 << 0)) || players.attacker) || players.disable_all ? true : false}>Mend</button>

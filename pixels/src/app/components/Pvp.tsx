@@ -7,9 +7,10 @@ type PvpProps = {
     character_name : string,
     canvas_width? : number,
     canvas_height? : number,
-    move_type : Dispatch<SetStateAction<MoveKey>>
+    move_type : Dispatch<SetStateAction<MoveKey>>,
+    mirror : boolean
 }
-const Pvp : React.FC<PvpProps> = ({move_num, character_name, canvas_height = 200, canvas_width = 100, move_type}) => {
+const Pvp : React.FC<PvpProps> = ({move_num, character_name, canvas_height = 200, canvas_width = 100, move_type, mirror}) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -30,6 +31,11 @@ const Pvp : React.FC<PvpProps> = ({move_num, character_name, canvas_height = 200
             let j = 0;
             function animate(){
                 ctx?.clearRect(0,0,canvas_width,canvas_height);
+                ctx?.save();
+                if(mirror){
+                    ctx?.translate(canvas_width,0);
+                    ctx?.scale(-1,1);
+                }
                 ctx?.drawImage(img,arr[i],arr[i+1],arr[i+2],arr[i+3],0,0,canvas_width,canvas_height);
                 j++;
                 if(j % stagger_frame == 0) i+=4;
@@ -39,17 +45,16 @@ const Pvp : React.FC<PvpProps> = ({move_num, character_name, canvas_height = 200
                     return;
                 }
                 i %= n;
+                ctx?.restore();
                 animation_frame = requestAnimationFrame(animate);
             }
             animate();
-            // might get f'ed up here
-            // if(move_num !== "0") move_type("0");
         }
         return () => {
             cancelAnimationFrame(animation_frame);
             ctx?.clearRect(0,0,canvas_width,canvas_height);
         }
-    }, [character_name, canvas_height, canvas_width, move_num, move_type])
+    }, [character_name, canvas_height, canvas_width, move_num, move_type, mirror])
     return (
         <canvas ref={canvasRef}></canvas>
     )

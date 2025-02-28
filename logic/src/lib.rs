@@ -54,22 +54,24 @@ impl Move {
             true => {
                 let attacker_buffs = self.buffs_player_1;
                 let defender_buffs = self.buffs_player_2;
-                let curr_char = CHARS.get(&self.charac_p1).expect("Why Character is not present in CHARS, when attacker is p1");
-                if(attacker_buffs & (1 << 2)) == 1 { total_damage += curr_char.additional_attack; } // additional attack 
-                if(attacker_buffs & (1 << 4)) == 1 { total_regen += curr_char.regen; } // regen
+                let att_char = CHARS.get(&self.charac_p1).expect("Why Character is not present in CHARS, when attacker is p1");
+                let def_char = CHARS.get(&self.charac_p2).expect("Why Character is not present in CHARS, when attacker is p2");
+                if(attacker_buffs & (1 << 2)) != 0 { total_damage += att_char.additional_attack; } // additional attack 
+                if(attacker_buffs & (1 << 4)) != 0 { total_regen += att_char.regen; } // regen
                 let mut def_regen = 0;
-                if(defender_buffs & (1 << 3)) == 1 {def_regen += curr_char.armor_rating;}
-                if(defender_buffs & (1 << 4)) == 1 {def_regen += curr_char.regen;}
+                // bug alert -> don't calculate def stats from curr_char
+                if(defender_buffs & (1 << 3)) != 0 {def_regen += def_char.armor_rating;}
+                if(defender_buffs & (1 << 4)) != 0 {def_regen += def_char.regen;}
                 let base_dmg = match self.move_type {
-                    1 => curr_char.basic_attack,
-                    2 => (0.8 * curr_char.basic_attack as f32).floor() as u8,
-                    3 => (0.5 * curr_char.basic_attack as f32).floor() as u8,
+                    1 => att_char.basic_attack,
+                    2 => (0.8 * att_char.basic_attack as f32).floor() as u8,
+                    3 => (0.5 * att_char.basic_attack as f32).floor() as u8,
                     5 => {
                         // LifeSteal
-                        total_regen += (0.4 * curr_char.basic_attack as f32).floor() as u8;
-                        (0.4 * curr_char.basic_attack as f32).floor() as u8
+                        total_regen += (0.4 * att_char.basic_attack as f32).floor() as u8;
+                        (0.4 * att_char.basic_attack as f32).floor() as u8
                     }
-                    _ => (0.3 * curr_char.basic_attack as f32).floor() as u8
+                    _ => (0.3 * att_char.basic_attack as f32).floor() as u8
                 };
                 self.h2 = (self.h2 + def_regen as i8 - (base_dmg + total_damage) as i8).max(0);
                 self.h1 = (self.h1 + total_regen as i8).min(100);
@@ -79,22 +81,23 @@ impl Move {
             _ => {
                 let attacker_buffs = self.buffs_player_2;
                 let defender_buffs = self.buffs_player_1;
-                let curr_char = CHARS.get(&self.charac_p2).expect("Why Character is not present in CHARS, when attacker is p2");
-                if(attacker_buffs & (1 << 2)) == 1 { total_damage += curr_char.additional_attack; } 
-                if(attacker_buffs & (1 << 4)) == 1 { total_regen += curr_char.regen; }
+                let att_char = CHARS.get(&self.charac_p2).expect("Why Character is not present in CHARS, when attacker is p2");
+                let def_char = CHARS.get(&self.charac_p1).expect("Why Character is not present in CHARS, when attacker is p1");
+                if(attacker_buffs & (1 << 2)) != 0 { total_damage += att_char.additional_attack; } 
+                if(attacker_buffs & (1 << 4)) != 0 { total_regen += att_char.regen; }
                 let mut def_regen = 0;
-                if(defender_buffs & (1 << 3)) == 1 {def_regen += curr_char.armor_rating;}
-                if(defender_buffs & (1 << 4)) == 1 {def_regen += curr_char.regen;}
+                if(defender_buffs & (1 << 3)) != 0 {def_regen += def_char.armor_rating;}
+                if(defender_buffs & (1 << 4)) != 0 {def_regen += def_char.regen;}
                 let base_dmg = match self.move_type {
-                    1 => curr_char.basic_attack,
-                    2 => (0.8 * curr_char.basic_attack as f32).floor() as u8,
-                    3 => (0.5 * curr_char.basic_attack as f32).floor() as u8,
+                    1 => att_char.basic_attack,
+                    2 => (0.8 * att_char.basic_attack as f32).floor() as u8,
+                    3 => (0.5 * att_char.basic_attack as f32).floor() as u8,
                     5 => {
                         // LifeSteal
-                        total_regen += (0.4 * curr_char.basic_attack as f32).floor() as u8;
-                        (0.4 * curr_char.basic_attack as f32).floor() as u8
+                        total_regen += (0.4 * att_char.basic_attack as f32).floor() as u8;
+                        (0.4 * att_char.basic_attack as f32).floor() as u8
                     }
-                    _ => (0.3 * curr_char.basic_attack as f32).floor() as u8
+                    _ => (0.3 * att_char.basic_attack as f32).floor() as u8
                 };
                 self.h1 = (self.h1 + def_regen as i8 - (base_dmg + total_damage) as i8).max(0);
                 self.h2 = (self.h2 + total_regen as i8).min(100);
@@ -298,4 +301,24 @@ pub async fn server(addr : impl ToSocketAddrs) -> Result<()>{
         });
     }
     Ok(())
+}
+
+#[test]
+fn test_calculate(){
+    let mut mv = Move {
+        charac_p1 : String::from("Ghost_Rider"),
+        charac_p2 : String::from("Mario"),
+        h1 : 97,
+        h2 : 86,
+        buffs_player_1 : 4,
+        buffs_player_2 : 8,
+        debuffs_player_1 : 0,
+        debuffs_player_2 : 0,
+        move_type : 4,
+        attacker : true,
+        locked : 0,
+        disable_all : false,
+    };
+    mv.calculate();
+    assert_eq!(mv.h2, 75);
 }

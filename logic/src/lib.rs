@@ -1,4 +1,5 @@
 mod characters;
+use core::f32;
 use std::{collections::{HashMap, VecDeque}, sync::Arc};
 use characters::CHARS;
 use serde::{Serialize,Deserialize};
@@ -33,7 +34,7 @@ struct Move {
 // X => toggle Armor (Reduces damage)
 // X => Think Something
 // X => Think Something
-
+// -> buffs -> 2 means additional attack , 3 -> armour, 4 -> regen 5 -> LifeSteal
 // say debuff look like this ->
 // Y => amount of additional damage to be done to the cur
 // can't think of anything else, => should this be a bool only ? (Maybe LifeSteal)
@@ -47,34 +48,58 @@ impl Move {
         return Move { charac_p1: c1.to_string(), charac_p2: c2.to_string(), h1: 100, h2: 100, buffs_player_1: 0, buffs_player_2: 0, debuffs_player_1: 0, debuffs_player_2: 0, attacker: !dis, move_type: 0, locked: 0 , disable_all : dis}
     }
     fn calculate(&mut self){
-        let mut diff = 0;
-        let mut att = 0;
+        let mut total_damage = 0;
+        let mut total_regen = 0;
         match self.attacker {
             true => {
-                let tmp = self.buffs_player_1;
+                let attacker_buffs = self.buffs_player_1;
+                let defender_buffs = self.buffs_player_2;
                 let curr_char = CHARS.get(&self.charac_p1).expect("Why Character is not present in CHARS, when attacker is p1");
-                if(tmp & (1 << 0)) == 1{ att += 4; } // should be added according to character
-                if(tmp & (1 << 1)) == 1{ diff -= 4; } 
-                if(tmp & (1 << 2)) == 1{ diff += 2; } 
-                // Do a base damage for all the attacks
-                let base = curr_char.basic_attack;
-                // we need to do something about Debuffs
-                // Update the Current object
-                self.h2 = ( diff + self.h2 - base as i8).max(0);
-                self.h1 = (self.h1 + att as i8).min(100);
+                if(attacker_buffs & (1 << 2)) == 1 { total_damage += curr_char.additional_attack; } // additional attack 
+                if(attacker_buffs & (1 << 4)) == 1 { total_regen += curr_char.regen; } // regen
+                let mut def_regen = 0;
+                if(defender_buffs & (1 << 3)) == 1 {def_regen += curr_char.armor_rating;}
+                if(defender_buffs & (1 << 4)) == 1 {def_regen += curr_char.regen;}
+                let base_dmg = match self.move_type {
+                    1 => curr_char.basic_attack,
+                    2 => (0.8 * curr_char.basic_attack as f32).floor() as u8,
+                    3 => (0.5 * curr_char.basic_attack as f32).floor() as u8,
+                    5 => {
+                        // LifeSteal
+                        total_regen += (0.4 * curr_char.basic_attack as f32).floor() as u8;
+                        (0.4 * curr_char.basic_attack as f32).floor() as u8
+                    }
+                    _ => (0.3 * curr_char.basic_attack as f32).floor() as u8
+                };
+                self.h2 = (self.h2 + def_regen as i8 - (base_dmg + total_damage) as i8).max(0);
+                self.h1 = (self.h1 + total_regen as i8).min(100);
+                self.buffs_player_1 = 0;
+                if self.move_type != 5 { self.buffs_player_1 = 1 << self.move_type; }
             }
             _ => {
-                let tmp = self.buffs_player_2;
+                let attacker_buffs = self.buffs_player_2;
+                let defender_buffs = self.buffs_player_1;
                 let curr_char = CHARS.get(&self.charac_p2).expect("Why Character is not present in CHARS, when attacker is p2");
-                if(tmp & (1 << 0)) == 1{ att += 4; } // should be added according to character
-                if(tmp & (1 << 1)) == 1{ diff -= 4; }
-                if(tmp & (1 << 2)) == 1{ diff += 2; } 
-                // Do a base damage for all the attacks
-                let base = curr_char.basic_attack;
-                // we need to do something about Debuffs
-                // Update the Current object
-                self.h1 = (diff + self.h1 - base as i8).max(0);
-                self.h2 = (self.h1 + att as i8).min(100);
+                if(attacker_buffs & (1 << 2)) == 1 { total_damage += curr_char.additional_attack; } 
+                if(attacker_buffs & (1 << 4)) == 1 { total_regen += curr_char.regen; }
+                let mut def_regen = 0;
+                if(defender_buffs & (1 << 3)) == 1 {def_regen += curr_char.armor_rating;}
+                if(defender_buffs & (1 << 4)) == 1 {def_regen += curr_char.regen;}
+                let base_dmg = match self.move_type {
+                    1 => curr_char.basic_attack,
+                    2 => (0.8 * curr_char.basic_attack as f32).floor() as u8,
+                    3 => (0.5 * curr_char.basic_attack as f32).floor() as u8,
+                    5 => {
+                        // LifeSteal
+                        total_regen += (0.4 * curr_char.basic_attack as f32).floor() as u8;
+                        (0.4 * curr_char.basic_attack as f32).floor() as u8
+                    }
+                    _ => (0.3 * curr_char.basic_attack as f32).floor() as u8
+                };
+                self.h1 = (self.h1 + def_regen as i8 - (base_dmg + total_damage) as i8).max(0);
+                self.h2 = (self.h2 + total_regen as i8).min(100);
+                self.buffs_player_2 = 0;
+                if self.move_type != 5 { self.buffs_player_2 = 1 << self.move_type; }
             }
         }
         self.attacker = !self.attacker;

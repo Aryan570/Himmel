@@ -2,7 +2,6 @@
 import Image from 'next/image'
 import React, { BaseSyntheticEvent, useEffect, useState } from 'react'
 import { ch_array, character_array, get_random } from '../characters'
-// import SignOut from './SignOut'
 import Matching from './Matching'
 const Banner = () => {
   const [character, setcharacter] = useState<ch_array>(get_random());
@@ -18,7 +17,6 @@ const Banner = () => {
     }
   }, [])
   function handle_click(e: BaseSyntheticEvent) {
-    // change state to the loading state
     setchoose(true);
   }
   function handle_choose(e : BaseSyntheticEvent){
@@ -38,9 +36,6 @@ const Banner = () => {
             </div>
         )
   }
-  // on click function for the button
-  // which would call the rust to find a match -- need to write backend code for this
-  // and maybe convert these gifs into some supported format images
   return (
     <div className='flex justify-around items-center h-screen'>
       <div className='w-1/3 h-1/3 bg-orange-500 rounded-lg border-2 flex justify-center items-center'>
@@ -59,7 +54,6 @@ const Banner = () => {
       <button onClick={handle_click} className='bg-orange-500 pixel-corners h-8 w-12 flex justify-center items-center hover:scale-125'>
         Play
       </button>
-      {/* <SignOut/> */}
     </div>
   )
 }

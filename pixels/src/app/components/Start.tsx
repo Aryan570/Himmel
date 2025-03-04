@@ -10,7 +10,6 @@ const Start = () => {
       }));
       socket.onmessage = (e : MessageEvent) => {
         console.log(e.data);
-        // setting the state
       }
       console.log("connected to Rust Server");
     }

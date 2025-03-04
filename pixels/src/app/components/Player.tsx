@@ -2,7 +2,7 @@ import React from 'react'
 import Image from 'next/image'
 type player_detail =  {
     health : number,
-    spells : string[],  // may use number later , like , 0100000101..
+    spells : string[],
     character_type : number,
 }
 const Player = (props : {dir : number , detail : player_detail}) => {

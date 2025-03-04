@@ -9,8 +9,8 @@ export type Move = {
     charac_p2: string | undefined,
     h1: number,
     h2: number,
-    buffs_player_1: number, // I will not need buffs and debuffs here =>
-    buffs_player_2: number, // but just for being consistent with server
+    buffs_player_1: number,
+    buffs_player_2: number,
     debuffs_player_1: number,
     debuffs_player_2: number,
     attacker: boolean,
@@ -18,8 +18,6 @@ export type Move = {
     locked: number,
     disable_all: boolean,
 }
-// MoveKey => maps to the array in moves => array store numbers such as || start_x || start_y || width_of_picture|| height_of_picture ||
-// 0 reflect the idle state
 export type MoveKey = "0" | "1" | "2" | "3" | "4" | "5";
 const Matching = (props: { char: string , banner : Dispatch<SetStateAction<boolean>> }) => {
     const [sock, setsock] = useState<WebSocket | undefined>(undefined);
@@ -32,8 +30,8 @@ const Matching = (props: { char: string , banner : Dispatch<SetStateAction<boole
             charac_p2: undefined,
             h1: 100,
             h2: 100,
-            buffs_player_1: 0, // I will not need buffs and debuffs here =>
-            buffs_player_2: 0, // but just for being consistent with server
+            buffs_player_1: 0,
+            buffs_player_2: 0,
             debuffs_player_1: 0,
             debuffs_player_2: 0,
             attacker: true,
@@ -45,16 +43,8 @@ const Matching = (props: { char: string , banner : Dispatch<SetStateAction<boole
     const [found, setfound] = useState(false);
     function to_rust(e: MouseEvent<HTMLButtonElement>) {
         let val = e.currentTarget.value;
-        // have a custom attribute so that we can differentiate between two player and which player to animate
         if(!(val === "0" || val === "1" ||  val === "2" || val === "3" || val === "4" || val === "5")) console.log("Wrong val");
         if(e.currentTarget.dataset.tag !== "1" && e.currentTarget.dataset.tag !== "2") console.log("tag is wrong");
-        // let key = players.charac_p1 as keyof typeof moves;
-        // if(e.currentTarget.dataset.tag === "2") key = players.charac_p2 as keyof typeof moves;
-        // Let's take this logic from server
-        // if(e.currentTarget.dataset.tag === "2") setmove_p2(val as MoveKey);
-        // else setmove_p1(val as MoveKey);
-        // let arr_ref = e.currentTarget.value as MoveKey;
-        // let _x : number[] = moves[key][arr_ref];
         let tmp = players;
         tmp.move_type = parseInt(val, 10);
         // set attacker as well
@@ -65,14 +55,12 @@ const Matching = (props: { char: string , banner : Dispatch<SetStateAction<boole
         e.preventDefault();
         props.banner(false);
     }
-    // didnot think that through
     useEffect(() => {
         const socket = new WebSocket("ws://127.0.0.1:8000");
         socket.onopen = () => {
-            // most probably, I won't do anything other than setting finding state to false
             console.log("Found an opponent");
             console.log(props.char);
-            socket.send(props.char); // what would this do actually? => I will store (player => character)
+            socket.send(props.char);
             setsock(socket);
         }
         socket.onmessage = (e: MessageEvent) => {
@@ -84,7 +72,6 @@ const Matching = (props: { char: string , banner : Dispatch<SetStateAction<boole
             if(!data.attacker && data.move_type != 10 && data.move_type != 20) setmove_p1(data.move_type.toString() as MoveKey);
             setfound(true);
             setplayers(data);
-            // console.log(data);
         }
 
         return () => {
@@ -107,20 +94,14 @@ const Matching = (props: { char: string , banner : Dispatch<SetStateAction<boole
                 </div>
             </div>
         )
-        // return (<End character={over} message={players.move_type === 10 ? "Victory is yours!" : "Next time, for sure!"} />)
     } 
     if (found) {
-        // _______________
-        // |      |      |
-        // |  P1  |  P2  |
-        // |      |      |
-        // |------|------|
         return (
             <div className='flex justify-center items-center h-screen'>
-                {/*bg-[url(/background_final_2.gif)] bg-no-repeat bg-cover*/}
-                <div className='flex justify-center items-center h-2/3 w-2/3 bg-gray-200 rounded-2xl '>
+                <div className='flex relative overflow-hidden justify-center items-center h-2/3 w-2/3 rounded-2xl'>
+                    <Image className='absolute' src={'/bg_3.gif'} alt='background-image' fill/>
                     <div className='flex flex-col h-full w-1/2'>
-                        <div className='h-1/6 w-3/4 ml-3'>
+                        <div className='h-1/6 w-3/4 ml-3 z-10'>
                             <p className='text-orange-600'>{players.charac_p1}</p>
                             <progress className='pixel-corners overflow-hidden rounded-2xl h-3' max={100} value={players.h1}></progress>
                         </div>
@@ -133,19 +114,17 @@ const Matching = (props: { char: string , banner : Dispatch<SetStateAction<boole
                                 <button value={5} data-tag="1" onClick={to_rust} className={`text-slate-50 active:scale-90 ring-4 ring-offset-2 my-1 pixel-corners ${((players.locked & (1 << 4)) || !players.attacker) || players.disable_all ? 'bg-slate-500 ring-slate-600' : 'bg-orange-400 hover:bg-orange-600 ring-orange-700'} rounded-r-2xl`} disabled={((players.locked & (1 << 4)) || !players.attacker) || players.disable_all ? true : false}>TODO</button>
                             </div>
                             <div className='flex justify-center items-center basis-5/6'>
-                                {/* <Image src={`/${players.charac_p1}.gif`} className='brightness-75' alt='character_1' height={100} width={100} /> */}
                                 <Pvp character_name={players.charac_p1!} move_num={move_p1} move_type={setmove_p1} mirror={false}/>
                             </div>
                         </div>
                     </div>
                     <div className='flex flex-col h-full w-1/2'>
-                        <div className='h-1/6 text-right mr-3'>
+                        <div className='h-1/6 text-right mr-3 z-10'>
                             <p className='text-orange-600'>{players.charac_p2}</p>
                             <progress className='pixel-corners overflow-hidden h-3 rounded-2xl' max={100} value={players.h2}></progress>
                         </div>
                         <div className='flex h-5/6 mr-3'>
                             <div className='flex justify-center items-center basis-5/6'>
-                                {/* <Image className='transform -scale-x-100 brightness-75' src={`/${players.charac_p2}.gif`} alt='character_1' height={100} width={100} /> */}
                                 <Pvp character_name={players.charac_p2!} move_num={move_p2} move_type={setmove_p2} mirror={true}/>
                             </div>
                             <div className='flex flex-col basis-1/6'>
@@ -172,5 +151,4 @@ const Matching = (props: { char: string , banner : Dispatch<SetStateAction<boole
         </div>
     )
 }
-
 export default Matching

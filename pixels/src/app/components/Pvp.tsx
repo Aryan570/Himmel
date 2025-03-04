@@ -27,7 +27,7 @@ const Pvp : React.FC<PvpProps> = ({move_num, character_name, canvas_height = 200
         let animation_frame : number;
         img.onload = () => {
             let i = 0;
-            let stagger_frame = 10;
+            let stagger_frame = 5;
             let j = 0;
             function animate(){
                 ctx?.clearRect(0,0,canvas_width,canvas_height);
@@ -56,7 +56,8 @@ const Pvp : React.FC<PvpProps> = ({move_num, character_name, canvas_height = 200
         }
     }, [character_name, canvas_height, canvas_width, move_num, move_type, mirror])
     return (
-        <canvas ref={canvasRef}></canvas>
+        // may change the translate to something that is more dynamic
+        <canvas className='z-10 translate-y-14' ref={canvasRef}></canvas>
     )
 }
 

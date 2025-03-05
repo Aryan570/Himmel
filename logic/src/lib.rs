@@ -59,7 +59,6 @@ impl Move {
                 if(attacker_buffs & (1 << 2)) != 0 { total_damage += att_char.additional_attack; } // additional attack 
                 if(attacker_buffs & (1 << 4)) != 0 { total_regen += att_char.regen; } // regen
                 let mut def_regen = 0;
-                // bug alert -> don't calculate def stats from curr_char
                 if(defender_buffs & (1 << 3)) != 0 {def_regen += def_char.armor_rating;}
                 if(defender_buffs & (1 << 4)) != 0 {def_regen += def_char.regen;}
                 let base_dmg = match self.move_type {
@@ -150,6 +149,7 @@ impl ServerState {
         match opponent {
             Some(x) => {
                 let opponent = x.get_opponent(player).expect("No opponent ?");
+                self.player_to_character.write().await.remove(&opponent);
                 self.id_to_session.write().await.remove(&opponent);
             }
             _ => {
@@ -247,11 +247,23 @@ async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_st
             if let Some(session) = c {
                 println!("Here!! I'm");
                 handle_move(&session, &server_state, player, &mut mov.unwrap()).await;
+            } else {
+                println!("No Game session found | disconnected!!");
             }
         }
     }
     println!("player disconnected : {}", player);
-    server_state.lock().await.remove_player(&player).await;
+    let lock = server_state.lock().await;
+    let opp = lock.get_session(&player).await;
+    if let Some(session) = opp {
+        if let Some(x) = session.get_opponent(&player) {
+            let mut n_mov = Move::new(&String::from(""), &String::from(""), true);
+            n_mov.move_type = 100;
+            let msg = serde_json::to_string(&n_mov).expect("This can't go wrong!!");
+            lock.send_to_player(&x, msg).await;
+        }
+    }
+    lock.remove_player(&player).await;
 }
 
 async fn handle_move(game_session : &GameSession, server_state : &Arc<Mutex<ServerState>>, player : PlayerId, data : &mut Move){

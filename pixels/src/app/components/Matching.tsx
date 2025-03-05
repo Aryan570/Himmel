@@ -4,6 +4,7 @@ import { Loader2, RotateCcw } from 'lucide-react'
 import Image from 'next/image'
 import React, { useEffect, useState, MouseEvent, SetStateAction, Dispatch } from 'react'
 import Pvp from './Pvp'
+import { useRouter } from 'next/navigation'
 export type Move = {
     charac_p1: string | undefined,
     charac_p2: string | undefined,
@@ -20,6 +21,7 @@ export type Move = {
 }
 export type MoveKey = "0" | "1" | "2" | "3" | "4" | "5";
 const Matching = (props: { char: string , banner : Dispatch<SetStateAction<boolean>> }) => {
+    const router = useRouter();
     const [sock, setsock] = useState<WebSocket | undefined>(undefined);
     const [over, setover] = useState<string>("");
     const [move_p1, setmove_p1] = useState<MoveKey>("0");
@@ -78,10 +80,11 @@ const Matching = (props: { char: string , banner : Dispatch<SetStateAction<boole
             socket.close(1000, "Client wants to disconnect");
             socket.onclose = () => {
                 console.log("bye bye rust");
+                router.push("/");
             }
             setsock(undefined);
         }
-    }, [props.char])
+    }, [props.char, router])
     if (over.length !== 0){
         return (
             <div className='flex justify-center items-center h-screen w-screen'>

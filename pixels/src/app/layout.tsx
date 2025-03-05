@@ -8,7 +8,7 @@ const pixel = Pixelify_Sans({subsets : ["latin","cyrillic","latin-ext"]});
 
 export const metadata: Metadata = {
   title: "Himmel",
-  description: "turn-based",
+  description: "Turn-based battle with your favorite characters",
 };
 
 export default function RootLayout({

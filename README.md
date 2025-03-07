@@ -8,6 +8,8 @@ This is a turn-based online game you can play with your friend, with server writ
 Backend&#39;s (Rust part aka &#39;/logic&#39;) heavy part is done, but the frontend is a different story. The idea for the front end is to use anime sprites to show the movements of the various characters.
 
 I can&#39;t make sprites myself, so I have to surf the internet and find packs that have similar characters because many sprites will have different sizes and stuff, which will be a real headache to work with.
+##### Music : *Poolside from Tekken*
+------------
 
 > If you want to run it right now
 Clone the project and run the following commands

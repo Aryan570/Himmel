@@ -4,7 +4,7 @@ import { Loader2, Pause, Play, RotateCcw } from 'lucide-react'
 import Image from 'next/image'
 import React, { useEffect, useState, MouseEvent, SetStateAction, Dispatch } from 'react'
 import Pvp from './Pvp'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Howl } from 'howler'
 export type Move = {
     charac_p1: string | undefined,
@@ -23,6 +23,7 @@ export type Move = {
 export type MoveKey = "0" | "1" | "2" | "3" | "4" | "5";
 const Matching = (props: { char: string, banner: Dispatch<SetStateAction<boolean>> }) => {
     const router = useRouter();
+    const pathname = usePathname();
     const [sock, setsock] = useState<WebSocket | undefined>(undefined);
     const [over, setover] = useState<string>("");
     const [move_p1, setmove_p1] = useState<MoveKey>("0");
@@ -46,6 +47,7 @@ const Matching = (props: { char: string, banner: Dispatch<SetStateAction<boolean
     const [found, setfound] = useState(false);
     const [howl, setHowl] = useState<Howl | undefined>(undefined);
     const [music, setMusic] = useState<boolean>(true);
+    const [disconnect, setDisconnect] = useState<boolean>(false);
     function to_rust(e: MouseEvent<HTMLButtonElement>) {
         let val = e.currentTarget.value;
         if (!(val === "0" || val === "1" || val === "2" || val === "3" || val === "4" || val === "5")) console.log("Wrong val");
@@ -56,8 +58,15 @@ const Matching = (props: { char: string, banner: Dispatch<SetStateAction<boolean
         let to_send = JSON.stringify(tmp);
         sock?.send(to_send);
     }
+    function handle_disconnect(e: MouseEvent<HTMLButtonElement>){
+        e.preventDefault();
+        props.banner(false);
+        sock?.close(1000, "Client wants to disconnect");
+        router.replace(pathname);
+    }
     function handle_click(e: MouseEvent<HTMLButtonElement>) {
         e.preventDefault();
+        sock?.close(1000, "Client wants to disconnect");
         props.banner(false);
     }
     function handle_music() {
@@ -96,6 +105,10 @@ const Matching = (props: { char: string, banner: Dispatch<SetStateAction<boolean
             const data: Move = JSON.parse(e.data);
             if (data.h1 === 0) setover(data.charac_p2!);
             else if (data.h2 === 0) setover(data.charac_p1!);
+            if(data.move_type === 100){
+                setDisconnect(true);
+                return;
+            }
             console.log("Here is the data ? : ", data);
             if (data.attacker && data.move_type != 10 && data.move_type != 20) setmove_p2(data.move_type.toString() as MoveKey);
             if (!data.attacker && data.move_type != 10 && data.move_type != 20) setmove_p1(data.move_type.toString() as MoveKey);
@@ -112,6 +125,18 @@ const Matching = (props: { char: string, banner: Dispatch<SetStateAction<boolean
             setsock(undefined);
         }
     }, [props.char, router])
+    if(disconnect){
+        return (
+            <div className='flex justify-center items-center h-screen w-screen'>
+                <div className='flex justify-center items-center h-1/3 w-1/3 bg-gray-200 rounded-2xl'>
+                    <div className='flex flex-col justify-around items-center w-1/3 h-5/6 text-slate-600'>
+                        <div className='mb-1 text-nowrap'>Opponent has disconnected</div>
+                        <div><button className='flex' onClick={handle_disconnect}><RotateCcw /> <div>Replay</div></button></div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
     if (over.length !== 0) {
         return (
             <div className='flex justify-center items-center h-screen w-screen'>

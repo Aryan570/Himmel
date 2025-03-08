@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic';
-const Main = dynamic(() => import('./components/Main'), { ssr: false })
+const Banner = dynamic(() => import('./components/Banner'), { ssr: false })
 export default function Home() {
   return (
-    <Main/>
+    <Banner/>
   );
 }

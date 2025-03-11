@@ -315,22 +315,48 @@ pub async fn server(addr : impl ToSocketAddrs) -> Result<()>{
     Ok(())
 }
 
-#[test]
-fn test_calculate(){
-    let mut mv = Move {
-        charac_p1 : String::from("Ghost_Rider"),
-        charac_p2 : String::from("Mario"),
-        h1 : 97,
-        h2 : 86,
-        buffs_player_1 : 4,
-        buffs_player_2 : 8,
-        debuffs_player_1 : 0,
-        debuffs_player_2 : 0,
-        move_type : 4,
-        attacker : true,
-        locked : 0,
-        disable_all : false,
-    };
-    mv.calculate();
-    assert_eq!(mv.h2, 75);
+
+#[cfg(test)]
+mod tests {
+    use async_std::task;
+    use futures::future::join_all;
+    use async_tungstenite::async_std::connect_async;
+    use super::*;
+
+    #[test]
+    fn test_calculate(){
+        let mut mv = Move {
+           charac_p1 : String::from("Ghost_Rider"),
+           charac_p2 : String::from("Mario"),
+           h1 : 97,
+           h2 : 86,
+           buffs_player_1 : 4,
+           buffs_player_2 : 8,
+           debuffs_player_1 : 0,
+           debuffs_player_2 : 0,
+           move_type : 4,
+           attacker : true,
+           locked : 0,
+           disable_all : false,
+        };
+        mv.calculate();
+        assert_eq!(mv.h2, 75);
+    }
+
+    #[async_std::test]
+    async fn test_mock(){
+        let mut client_tasks = Vec::with_capacity(1000_usize);
+        for i in 0..1000 {
+            client_tasks.push(task::spawn(async move {
+                let request = Request::builder().uri("ws://127.0.0.1:8000").body(()).expect("Error in test -> Building request");
+                match connect_async(request).await {
+                   Ok((mut ws_stream, _)) => {
+
+                    },
+                    Err(e) => eprintln!("Couldn't connect to Client : {e}")
+                }
+            }));
+        }
+        join_all(client_tasks).await;
+    }
 }

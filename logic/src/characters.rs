@@ -20,5 +20,7 @@ pub static CHARS : phf::Map<&'static str, Character> = phf_map!{
     "1" => c!(9,4,0,0,7),
     "Ghost_Rider" => c!(9,9,3,4,9),
     "Mario" => c!(5,5,0,2,4),
-    "Buu" => c!(9,7,2,5,5)
+    "Buu" => c!(9,7,2,5,5),
+    "Sasuke" => c!(8,8,4,8,8),
+    "Naruto" => c!(8,8,3,5,9)
 };

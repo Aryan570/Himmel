@@ -2,8 +2,14 @@ import ws from 'k6/ws';
 import { check } from 'k6';
 
 export let options = {
-  vus: 1000,
-  duration : '15s'
+  vus: 100,
+  // duration : '1s',
+  // iterations : 1000,
+  stages: [
+    { duration: '5s', target: 50 },
+    { duration: '10s', target: 100 },
+    { duration: '5s', target: 0 }
+  ],
 }
 const character_array = [
     {
@@ -53,7 +59,7 @@ export default function () {
 
       socket.setTimeout(() => {
         socket.close();
-      }, 5000);
+      }, 3000);
     });
 
     check(response, { "status is 101": (r) => r && r.status === 101 });

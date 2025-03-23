@@ -245,7 +245,7 @@ async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_st
                 continue;
             }
             if let Some(session) = c {
-                println!("Here!! I'm");
+                //println!("Here!! I'm");
                 handle_move(&session, &server_state, player, &mut mov.unwrap()).await;
             } else {
                 println!("No Game session found | disconnected!!");
@@ -264,6 +264,9 @@ async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_st
         }
     }
     lock.remove_player(&player).await;
+    println!("-----------------------{}----------------------------\n",lock.player_to_character.read().await.len());
+    println!("-----------------------{}----------------------------\n",lock.players.read().await.len());
+    println!("-----------------------{}----------------------------\n",lock.id_to_session.read().await.len());
 }
 
 async fn handle_move(game_session : &GameSession, server_state : &Arc<Mutex<ServerState>>, player : PlayerId, data : &mut Move){
@@ -318,9 +321,9 @@ pub async fn server(addr : impl ToSocketAddrs) -> Result<()>{
 
 #[cfg(test)]
 mod tests {
-    use async_std::task;
+    /*use async_std::task;
     use futures::future::join_all;
-    use async_tungstenite::async_std::connect_async;
+    use async_tungstenite::async_std::connect_async;*/
     use super::*;
 
     #[test]
@@ -341,22 +344,5 @@ mod tests {
         };
         mv.calculate();
         assert_eq!(mv.h2, 75);
-    }
-
-    #[async_std::test]
-    async fn test_mock(){
-        let mut client_tasks = Vec::with_capacity(1000_usize);
-        for i in 0..1000 {
-            client_tasks.push(task::spawn(async move {
-                let request = Request::builder().uri("ws://127.0.0.1:8000").body(()).expect("Error in test -> Building request");
-                match connect_async(request).await {
-                   Ok((mut ws_stream, _)) => {
-
-                    },
-                    Err(e) => eprintln!("Couldn't connect to Client : {e}")
-                }
-            }));
-        }
-        join_all(client_tasks).await;
     }
 }

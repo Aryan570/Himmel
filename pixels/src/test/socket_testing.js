@@ -3,12 +3,12 @@ import { check } from 'k6';
 
 export let options = {
   vus: 100,
-  // duration : '1s',
-  // iterations : 1000,
+  // duration : '10s',
+  // iterations : 100,
   stages: [
     { duration: '5s', target: 50 },
     { duration: '10s', target: 100 },
-    { duration: '5s', target: 0 }
+    { duration: '5s', target: 10 }
   ],
 }
 const character_array = [
@@ -44,7 +44,6 @@ export default function () {
   
       socket.on("message", (data) => {
         const res = JSON.parse(data);
-        console.log("Received:", res);
         res.move_type = 2;
         socket.send(JSON.stringify(res));
       });

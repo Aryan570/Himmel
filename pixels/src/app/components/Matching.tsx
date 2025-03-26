@@ -120,7 +120,7 @@ const Matching = (props: { char: string, banner: Dispatch<SetStateAction<boolean
             socket.close(1000, "Client wants to disconnect");
             socket.onclose = () => {
                 console.log("bye bye rust");
-                router.push("/");
+                // router.push("/");
             }
             setsock(undefined);
         }

@@ -109,7 +109,7 @@ impl Move {
     }
 }
 
-#[derive(Clone,Copy)]
+#[derive(Clone,Copy,Debug)]
 struct GameSession {
     p1 : PlayerId,
     p2 : PlayerId
@@ -149,6 +149,9 @@ impl ServerState {
         match opponent {
             Some(x) => {
                 let opponent = x.get_opponent(player).expect("No opponent ?");
+                // maybe I shouldn't remove opponent, when the player disconnects
+                // well I should remove => cause I'm moving the opponent to char select screen
+                // I should remove opponent from players as well
                 self.player_to_character.write().await.remove(&opponent);
                 self.id_to_session.write().await.remove(&opponent);
             }
@@ -217,6 +220,25 @@ impl MatchMaking {
     }
 }
 
+async fn clean_up_player(state : &Arc<Mutex<ServerState>>, player : &PlayerId) {
+    let lock = state.lock().await;
+    lock.players.write().await.remove(&player);
+    lock.player_to_character.write().await.remove(&player);
+    let session = lock.id_to_session.read().await.get(&player).copied();
+    if let Some(game) = session {
+        let opponent_id = game.get_opponent(&player);
+        lock.id_to_session.write().await.remove(&player);
+        if let Some(x) = opponent_id {
+            lock.id_to_session.write().await.remove(&x);
+            lock.player_to_character.write().await.remove(&x);
+            lock.players.write().await.remove(&x);
+        }
+    }
+    println!("-----------------------{}----------------------------\n",lock.player_to_character.read().await.len());
+    println!("-----------------------{}----------------------------\n",lock.players.read().await.len());
+    println!("-----------------------{}----------------------------\n",lock.id_to_session.read().await.len());
+}
+
 async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_state : &Arc<Mutex<ServerState>>, player : PlayerId, mm : &Arc<Mutex<MatchMaking>>){
     let (mut ws_sender, mut ws_recv) = socket_stream.split();
     let (tx, mut rx) = unbounded();
@@ -249,6 +271,7 @@ async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_st
                 handle_move(&session, &server_state, player, &mut mov.unwrap()).await;
             } else {
                 println!("No Game session found | disconnected!!");
+                break;
             }
         }
     }
@@ -261,12 +284,12 @@ async fn handle_connection(socket_stream : WebSocketStream<TcpStream>, server_st
             n_mov.move_type = 100;
             let msg = serde_json::to_string(&n_mov).expect("This can't go wrong!!");
             lock.send_to_player(&x, msg).await;
+            //lock.players.write().await.remove(&x);
         }
     }
-    lock.remove_player(&player).await;
-    println!("-----------------------{}----------------------------\n",lock.player_to_character.read().await.len());
-    println!("-----------------------{}----------------------------\n",lock.players.read().await.len());
-    println!("-----------------------{}----------------------------\n",lock.id_to_session.read().await.len());
+    //lock.remove_player(&player).await;
+    drop(lock);
+    clean_up_player(server_state, &player).await;
 }
 
 async fn handle_move(game_session : &GameSession, server_state : &Arc<Mutex<ServerState>>, player : PlayerId, data : &mut Move){
